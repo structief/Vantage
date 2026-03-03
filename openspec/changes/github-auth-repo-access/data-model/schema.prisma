@@ -1,0 +1,54 @@
+// Spec reference: specs/feature-github-auth-repo-access.md
+// Migration: 001_add_user_profile_and_repo_cache
+//   Adds UserProfile (display name + avatar for nav header)
+//   and RepoCache (paginated GitHub repo listing with TTL).
+//
+// Runtime: Prisma Client + better-sqlite3 driver
+// DB file:  .vantage/vantage.db  (configurable via DATABASE_URL env var)
+// Migrate:  npx prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL") // default: "file:.vantage/vantage.db"
+}
+
+// ─── Requirement: User Profile Display ───────────────────────────────────────
+// Upserted on every successful GitHub OAuth login.
+// Persists display name and avatar URL so the nav header can render them
+// after a server restart without a GitHub API call.
+
+model UserProfile {
+  github_login String   @id
+  name         String   // GitHub display name (e.g. "The Octocat") — shown in nav
+  avatar_url   String   // GitHub avatar image URL — shown in nav
+  updated_at   DateTime @updatedAt
+
+  @@map("user_profiles")
+}
+
+// ─── Requirement: Accessible Repository Listing ──────────────────────────────
+// One row per authenticated user. Overwritten on each cache refresh.
+// `repositories` stores a JSON-serialised CachedRepository[] (capped at 1000).
+//
+// CachedRepository shape:
+// {
+//   id:             number   — GitHub repository ID
+//   full_name:      string   — "owner/repo"
+//   name:           string   — short name
+//   owner_login:    string   — GitHub login of repo owner
+//   visibility:     "public" | "private"
+//   default_branch: string
+//   read_only:      boolean  — true when permissions.push === false
+// }
+
+model RepoCache {
+  github_login String   @id
+  fetched_at   DateTime
+  repositories String   // JSON — Array<CachedRepository>, max 1000 entries
+
+  @@map("repo_cache")
+}

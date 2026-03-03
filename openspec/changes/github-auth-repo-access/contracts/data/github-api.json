@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "contracts/data/github-api.json",
+  "title": "GitHub API — Response Shapes (subset used by Vantage)",
+  "description": "Documents the fields Vantage reads from the GitHub REST API. Only the fields actually consumed are listed. Any GitHub API field not present here is not relied upon and MAY be ignored during mapping. Source: https://docs.github.com/en/rest",
+
+  "definitions": {
+
+    "GitHubUser": {
+      "$id": "#/definitions/GitHubUser",
+      "title": "GitHub User",
+      "description": "User identity resolved from the GitHub OAuth callback. Returned by GET https://api.github.com/user using the authenticated token. Used to populate the NextAuth JWT (login, name, avatarUrl).",
+      "type": "object",
+      "required": ["id", "login"],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Stable numeric GitHub user ID. Used as the canonical identity key."
+        },
+        "login": {
+          "type": "string",
+          "description": "GitHub username (e.g. 'octocat'). Used as the LowDB cache key for repo_cache."
+        },
+        "name": {
+          "type": ["string", "null"],
+          "description": "Display name. May be null if the user has not set one. Shown in the Vantage UI."
+        },
+        "avatar_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the user's GitHub avatar image."
+        },
+        "email": {
+          "type": ["string", "null"],
+          "description": "Primary email address. May be null if the user has not made it public. Stored in session but not currently displayed."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "GitHubRepository": {
+      "$id": "#/definitions/GitHubRepository",
+      "title": "GitHub Repository",
+      "description": "A single repository entry from GET https://api.github.com/user/repos?affiliation=owner,collaborator,organization_member&per_page=100. Vantage reads a subset of the full GitHub repository object.",
+      "type": "object",
+      "required": ["id", "name", "full_name", "owner", "private", "default_branch"],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Stable numeric GitHub repository ID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Short repository name without the owner prefix (e.g. 'hello-world')."
+        },
+        "full_name": {
+          "type": "string",
+          "pattern": "^[^/]+/[^/]+$",
+          "description": "Fully-qualified name in 'owner/repo' format (e.g. 'octocat/hello-world')."
+        },
+        "owner": {
+          "type": "object",
+          "required": ["login"],
+          "properties": {
+            "login": {
+              "type": "string",
+              "description": "GitHub login of the repository owner (user or organisation)."
+            }
+          },
+          "additionalProperties": true,
+          "description": "Partial owner object. Only 'login' is consumed by Vantage."
+        },
+        "private": {
+          "type": "boolean",
+          "description": "True if the repository is private. Mapped to visibility='private' in CachedRepository."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public", "private", "internal"],
+          "description": "Repository visibility. 'internal' is treated as 'private' in Vantage."
+        },
+        "default_branch": {
+          "type": "string",
+          "description": "Name of the repository's default branch (e.g. 'main', 'master')."
+        },
+        "archived": {
+          "type": "boolean",
+          "description": "If true, the repository is archived and read-only on GitHub. Vantage MUST set read_only=true for archived repos regardless of push permissions."
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "If true, the repository has been disabled. Vantage MUST exclude disabled repositories from the listing."
+        },
+        "permissions": {
+          "type": "object",
+          "description": "Permission flags for the authenticated user on this repository. If absent, Vantage defaults to read_only=true.",
+          "properties": {
+            "admin": {
+              "type": "boolean"
+            },
+            "push": {
+              "type": "boolean",
+              "description": "True if the user can push (write) to this repository. False maps to read_only=true in Vantage."
+            },
+            "pull": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "GitHubRepositoryListResponse": {
+      "$id": "#/definitions/GitHubRepositoryListResponse",
+      "title": "GitHub Repository List Response",
+      "description": "Array of GitHubRepository objects returned by paginated calls to GET /user/repos. Vantage follows the 'Link' response header to fetch all pages until no 'next' relation is present.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/GitHubRepository"
+      }
+    },
+
+    "GitHubRateLimitError": {
+      "$id": "#/definitions/GitHubRateLimitError",
+      "title": "GitHub Rate Limit Error",
+      "description": "Response shape when GitHub returns 403 or 429 due to rate limiting. Vantage checks X-RateLimit-Remaining header (value '0') to distinguish rate-limit 403s from permission 403s.",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "API rate limit exceeded for user ID 1234.",
+          "description": "Human-readable message from GitHub."
+        },
+        "documentation_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "headers": {
+        "X-RateLimit-Remaining": {
+          "description": "'0' when the rate limit is exhausted. Vantage reads this to decide whether to serve from cache."
+        },
+        "X-RateLimit-Reset": {
+          "description": "Unix timestamp at which the rate limit resets. Can be surfaced in the Vantage UI as 'try again at <time>'."
+        }
+      }
+    }
+
+  }
+}

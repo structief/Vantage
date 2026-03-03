@@ -1,0 +1,232 @@
+openapi: "3.0.3"
+info:
+  title: "Vantage — GitHub Auth & Repository Access"
+  version: "1.0.0"
+  description: >
+    API contracts for GitHub OAuth authentication and accessible repository listing.
+    NextAuth handles /api/auth/** routes internally; this contract covers the
+    application-level endpoints that consumers interact with directly.
+
+paths:
+  /api/me:
+    get:
+      summary: "Get authenticated user profile"
+      operationId: "getMe"
+      description: >
+        Returns the display name and avatar URL of the authenticated user,
+        loaded from the local store. Does not call the GitHub API.
+        Requires an active session (HTTP-only session cookie).
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: "User profile returned"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: "Unauthenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "UNAUTHENTICATED"
+                message: "Your session has expired. Please sign in again."
+
+  /api/repos:
+    get:
+      summary: "List accessible repositories"
+      operationId: "listRepositories"
+      description: >
+        Returns the cached list of GitHub repositories accessible to the authenticated user
+        (owner, collaborator, and organisation-member affiliations). Triggers a live fetch
+        from the GitHub API if the cache is absent or older than the configured TTL (default 5 min).
+        Requires an active session (HTTP-only session cookie).
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: "Repository list returned (from cache or live fetch)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepoListResponse"
+        "401":
+          description: "Unauthenticated — no valid session cookie present"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "UNAUTHENTICATED"
+                message: "Your session has expired. Please sign in again."
+        "429":
+          description: "GitHub API rate limit reached; cached list returned if available"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepoListResponse"
+              example:
+                fetched_at: "2026-03-03T10:00:00Z"
+                stale: true
+                rate_limit_hit: true
+                repositories: []
+        "503":
+          description: "GitHub API unreachable and no cached data available"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "GITHUB_UNAVAILABLE"
+                message: "GitHub rate limit reached. Please try again in a few minutes."
+
+  /api/repos/refresh:
+    post:
+      summary: "Force refresh the repository list"
+      operationId: "refreshRepositories"
+      description: >
+        Forces a live re-fetch of all accessible repositories from the GitHub API,
+        regardless of cache TTL. Updates the local cache and returns the updated list.
+        Requires an active session.
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: "Repository list refreshed and returned"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepoListResponse"
+        "401":
+          description: "Unauthenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: "GitHub API rate limit hit during forced refresh"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "RATE_LIMITED"
+                message: "GitHub rate limit reached. Please try again in a few minutes."
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: next-auth.session-token
+      description: >
+        HTTP-only session cookie set by NextAuth after successful GitHub OAuth login.
+        Not accessible from JavaScript; attached automatically by the browser.
+
+  schemas:
+    UserProfile:
+      type: object
+      required:
+        - github_login
+        - name
+        - avatar_url
+      properties:
+        github_login:
+          type: string
+          description: "GitHub username (login handle)"
+          example: "octocat"
+        name:
+          type: string
+          description: "GitHub display name shown in the Vantage navigation header"
+          example: "The Octocat"
+        avatar_url:
+          type: string
+          format: uri
+          description: "GitHub avatar image URL"
+          example: "https://avatars.githubusercontent.com/u/583231"
+
+    Repository:
+      type: object
+      required:
+        - id
+        - full_name
+        - name
+        - visibility
+        - default_branch
+        - read_only
+      properties:
+        id:
+          type: integer
+          description: "GitHub repository ID"
+          example: 12345
+        full_name:
+          type: string
+          description: "Fully qualified repository name in owner/repo format"
+          example: "octocat/hello-world"
+        name:
+          type: string
+          description: "Short repository name"
+          example: "hello-world"
+        owner_login:
+          type: string
+          description: "GitHub login of the repository owner"
+          example: "octocat"
+        visibility:
+          type: string
+          enum: ["public", "private"]
+          description: "Repository visibility on GitHub"
+        default_branch:
+          type: string
+          description: "Name of the default branch"
+          example: "main"
+        read_only:
+          type: boolean
+          description: >
+            True if the authenticated user's token does not have push access.
+            Write actions (commit, PR creation) are disabled in Vantage for read-only repos.
+
+    RepoListResponse:
+      type: object
+      required:
+        - fetched_at
+        - stale
+        - repositories
+      properties:
+        fetched_at:
+          type: string
+          format: date-time
+          description: "ISO 8601 timestamp of the last successful GitHub API fetch"
+          example: "2026-03-03T10:00:00Z"
+        stale:
+          type: boolean
+          description: "True if the cache TTL has been exceeded (list was served from stale cache)"
+        rate_limit_hit:
+          type: boolean
+          description: "True if the response was served from cache because GitHub rate-limited the request"
+        repositories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Repository"
+          description: "Repositories accessible to the authenticated user (capped at 1000)"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: "Machine-readable error code"
+          enum:
+            - UNAUTHENTICATED
+            - SESSION_EXPIRED
+            - RATE_LIMITED
+            - GITHUB_UNAVAILABLE
+        message:
+          type: string
+          description: "Human-readable error message shown to the user"
+          example: "Your session has expired. Please sign in again."
