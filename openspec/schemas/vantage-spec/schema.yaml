@@ -1,0 +1,258 @@
+name: vantage-spec
+version: 1
+description: "Vantage workflow - specs → design → [opsx-generate: contracts, data-model, tests] → tasks → apply"
+artifacts:
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Feature specifications - exact behavior, inputs/outputs, edge cases, error messages
+    template: spec.md
+    instruction: |
+      Create specification files that define WHAT the system should do.
+      Read constitution.md from the project root for context before writing.
+
+      Create one spec file per feature listed in the scope.
+      - New features: kebab-case name (specs/feature-<name>.md).
+      - Modified features: use the existing spec name from openspec/specs/<capability>/
+        when creating the delta spec at specs/<capability>/spec.md.
+
+      Delta operations (use ## headers):
+      - **ADDED Requirements**: New capabilities
+      - **MODIFIED Requirements**: Changed behavior - MUST include full updated content
+      - **REMOVED Requirements**: Deprecated features - MUST include **Reason** and **Migration**
+      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format
+
+      Format requirements:
+      - Each requirement: `### Requirement: <name>` followed by description
+      - Use SHALL/MUST for normative requirements (avoid should/may)
+      - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
+      - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
+      - Every requirement MUST have at least one scenario.
+
+      MODIFIED requirements workflow:
+      1. Locate the existing requirement in openspec/specs/<capability>/spec.md
+      2. Copy the ENTIRE requirement block (from `### Requirement:` through all scenarios)
+      3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior
+      4. Ensure header text matches exactly (whitespace-insensitive)
+
+      Specs are the source of truth for devs and QA. Each scenario maps directly to a test flow.
+    requires: []
+
+  - id: design
+    generates: design.md
+    description: Technical design - HOW to implement the change, key decisions and trade-offs
+    template: design.md
+    instruction: |
+      Create the design document that explains HOW to implement the change.
+      Read constitution.md from the project root and the specs before writing.
+
+      When to include design.md (create only if any apply):
+      - Cross-cutting change (multiple services/modules) or new architectural pattern
+      - New external dependency or significant data model changes
+      - Security, performance, or migration complexity
+      - Ambiguity that benefits from technical decisions before coding
+
+      Sections:
+      - **Context**: Background, current state, constraints
+      - **Goals / Non-Goals**: What this design achieves and explicitly excludes
+      - **Decisions**: Key technical choices with rationale. For each decision: what, why, alternatives considered.
+      - **Data model changes**: If applicable, describe new/modified entities and fields.
+      - **API changes**: If applicable, describe new/modified endpoints, request/response shapes.
+      - **Risks / Trade-offs**: Known limitations. Format: [Risk] → Mitigation
+      - **Open Questions**: Outstanding unknowns to resolve before or during implementation
+
+      Focus on architecture and approach, not line-by-line implementation.
+      Good design docs explain the "why" behind technical decisions.
+    requires:
+      - specs
+
+  - id: contracts
+    generates: "contracts/**"
+    description: API, event and data contracts - the formal interface definitions
+    template: contracts.yaml
+    instruction: |
+      Generate formal interface contracts derived from the specs and design.
+      Read constitution.md, specs, and design before writing.
+
+      Create files in the appropriate subdirectory:
+      - contracts/api/<name>.yaml          → OpenAPI 3.0 spec for REST/HTTP endpoints exposed by Vantage
+      - contracts/events/<name>.json       → JSON Schema for event payloads (webhooks, etc.)
+      - contracts/data/<name>.json         → JSON Schema for shared data structures AND external API
+                                             response shapes that Vantage depends on.
+
+      When to create a contracts/data/ file:
+      - The change integrates with an external API (e.g. GitHub API, Stripe, etc.) and
+        Vantage maps fields from that API's response into its own data model.
+      - Document ONLY the fields actually consumed by Vantage (not the full external schema).
+      - Add a "headers" block if response headers are part of the integration logic
+        (e.g. X-RateLimit-Remaining for GitHub rate limiting).
+      - Use "$id" anchors so individual types can be referenced from other contracts.
+
+      Only generate what the specs actually require. If the specs define an interface
+      (endpoint, event, external API mapping, shared model), generate its contract.
+      Skip if not applicable.
+
+      Each contract MUST be consistent with the spec scenarios - endpoints, payloads, and
+      field names MUST match what the specs describe. Contracts are the implementation target,
+      not the other way around.
+    requires:
+      - specs
+      - design
+
+  - id: data-model
+    generates: "data-model/schema.prisma"
+    description: Data model - Prisma schema derived from the specs (optional, only if data changes)
+    template: schema.prisma
+    instruction: |
+      Generate or update the Prisma schema based on the specs and design.
+      Read constitution.md, specs, and design before writing.
+
+      This artifact is OPTIONAL. Only create it if the specs require new or changed
+      persisted data. Skip entirely if this change is purely behavioral or API-level.
+
+      Rules:
+      - Derive model names, field names, and types directly from spec requirements
+      - Add a comment above each model referencing the spec requirement it satisfies
+      - Use Prisma best practices: @id, @unique, @relation, @@index where appropriate
+      - Include a migration note at the top describing what changed and why
+
+      The schema.prisma here represents the DELTA for this change - it will be merged with
+      the project's main schema during implementation. Mark new fields/models clearly.
+    requires:
+      - specs
+      - design
+
+  - id: tests
+    generates: "tests/**/*.flow.md"
+    description: Test flows - language-agnostic behavioral descriptions, translated to code during apply
+    template: tests.flow.md
+    instruction: |
+      Generate textual test flows from the spec scenarios.
+      Read constitution.md, specs, contracts, and design before writing.
+
+      Create one flow file per spec feature: tests/<feature-name>.flow.md
+
+      Each flow file contains behavioral flows derived from the spec's `#### Scenario:` blocks.
+      These are NOT code - they are precise, human-readable descriptions of observable behavior
+      that will be translated to test code (unit, contract, or e2e) during apply.
+
+      Flow format per scenario:
+      ```
+      ## Flow: <scenario name from spec>
+      Type: unit | contract | e2e
+      Spec: specs/<feature>.md > Requirement: <name>
+
+      Setup:
+      - <precondition 1>
+      - <precondition 2>
+
+      Steps:
+      1. <action>
+      2. <action>
+
+      Expected:
+      - <observable outcome>
+      - <observable outcome>
+
+      Edge cases:
+      - <edge case description and expected outcome>
+      ```
+
+      Rules:
+      - Every spec scenario MUST have at least one flow
+      - Use "contract" type for flows that verify API/event contracts
+      - Use "e2e" type for flows that span multiple systems
+      - Use "unit" type for isolated logic flows
+      - Reference contract files where relevant (e.g., "See contracts/api/checkout.yaml")
+      - Be precise about error messages, status codes, and field names - use the exact values from specs
+    requires:
+      - specs
+      - design
+
+  - id: tasks
+    generates: plan/tasks.md
+    description: Implementation tasks derived from all artifacts - the actionable checklist
+    template: tasks.md
+    instruction: |
+      Create the implementation task list. This is the last artifact before apply.
+
+      **IMPORTANT: Follow the template below exactly.** The apply phase parses
+      checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
+
+      Before writing tasks, read ALL available artifacts:
+      - constitution.md (project root)
+      - specs/
+      - design.md
+      - contracts/** (if generated via opsx-generate)
+      - data-model/schema.prisma (if generated via opsx-generate)
+      - tests/**/*.flow.md (if generated via opsx-generate)
+
+      If contracts, data-model, or tests have NOT been generated yet, note that in
+      the tasks file and add tasks for generating them first.
+
+      Group tasks following this order:
+      1. Data model (schema.prisma updates, migrations)
+      2. Contracts (API YAML, event/data JSONs)
+      3. Test flows (if not yet generated)
+      4. Core implementation
+      5. Test code (translating .flow.md files to actual test code - done in apply)
+      6. Integration / wiring
+
+      Example:
+      ```
+      ## 1. Data model
+
+      - [ ] 1.1 Update data-model/schema.prisma with new Order model
+      - [ ] 1.2 Write migration 002_add_orders.sql
+
+      ## 2. Contracts
+
+      - [ ] 2.1 Create contracts/api/checkout.yaml (POST /checkout endpoint)
+      - [ ] 2.2 Create contracts/events/order-placed.json event schema
+
+      ## 3. Implementation
+
+      - [ ] 3.1 Implement CheckoutService.process()
+      - [ ] 3.2 Wire up POST /checkout route
+
+      ## 4. Tests
+
+      - [ ] 4.1 Translate tests/checkout.flow.md to tests/contract/checkout.contract.test
+      - [ ] 4.2 Translate unit flows to tests/unit/checkout.test
+      ```
+
+      Each task must be verifiable - you know exactly when it's done.
+    requires:
+      - specs
+      - design
+
+apply:
+  requires: [tasks]
+  tracks: plan/tasks.md
+  instruction: |
+    Read ALL context files before starting. All artifacts live inside the change folder
+    (openspec/changes/<name>/). Also read constitution.md from the project root.
+
+    Context files to read:
+    - constitution.md (project root)
+    - specs/**/*.md
+    - design.md
+    - contracts/** (if generated)
+    - data-model/schema.prisma (if generated)
+    - tests/**/*.flow.md (if generated)
+    - plan/tasks.md
+
+    Work through pending tasks, mark complete as you go.
+
+    Special handling for test tasks:
+    When a task involves writing tests, find the corresponding .flow.md file in tests/.
+    Translate each Flow block to actual test code in the project's test framework.
+    Write the translated test code to the real project source tree (not inside openspec/),
+    placing it in:
+    - tests/contract/ for contract tests (Type: contract)
+    - tests/unit/ for unit tests (Type: unit)
+    - tests/e2e/ for end-to-end tests (Type: e2e)
+
+    The .flow.md "Expected:" block becomes assertions. "Steps:" become the test body.
+    "Setup:" becomes test fixtures or beforeEach. Keep the Flow name as the test description.
+
+    Pause if you hit blockers, unclear requirements, or design issues. Don't guess.

@@ -1,0 +1,22 @@
+// Migration note: <!-- describe what this change adds/modifies and why -->
+// Spec reference: specs/<!-- feature-name -->.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// <!-- Requirement: <name from spec> -->
+model <!-- ModelName --> {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // <!-- field -->  <!-- type -->
+
+  @@map("<!-- table_name -->")
+}

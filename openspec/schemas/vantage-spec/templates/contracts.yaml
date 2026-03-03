@@ -1,0 +1,46 @@
+openapi: "3.0.3"
+info:
+  title: "<!-- Service name -->"
+  version: "1.0.0"
+  description: "<!-- What this API does -->"
+
+paths:
+  /<!-- resource -->:
+    post:
+      summary: "<!-- Action -->"
+      operationId: "<!-- camelCase -->"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/<!-- RequestSchema -->"
+      responses:
+        "200":
+          description: "<!-- Success description -->"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/<!-- ResponseSchema -->"
+        "400":
+          description: "<!-- Validation error -->"
+        "404":
+          description: "<!-- Not found -->"
+
+components:
+  schemas:
+    <!-- RequestSchema -->:
+      type: object
+      required:
+        - <!-- required field -->
+      properties:
+        <!-- field -->:
+          type: string
+          description: "<!-- description -->"
+
+    <!-- ResponseSchema -->:
+      type: object
+      properties:
+        <!-- field -->:
+          type: string
+          description: "<!-- description -->"
