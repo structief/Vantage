@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getRepoGradient, getRepoInitials } from "@/lib/gradients";
 import RepoPicker from "@/components/RepoPicker";
+import { useSidebarMode } from "@/components/SidebarModeProvider";
 
 export interface PinnedRepo {
   full_name: string;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function RepoSidebar({ initialPinnedRepos }: Props) {
+  const { mode, toggleMode } = useSidebarMode();
   const [repos, setRepos] = useState<PinnedRepo[]>(initialPinnedRepos);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
@@ -85,7 +87,16 @@ export default function RepoSidebar({ initialPinnedRepos }: Props) {
 
   return (
     <>
-      <aside className="flex flex-col items-center w-[68px] py-5 gap-5 bg-[#f7f7f8] border-r border-gray-100 shrink-0">
+      <aside className="flex flex-col items-center w-[68px] py-3 gap-5 bg-[#f7f7f8] border-r border-gray-100 shrink-0">
+        {/* Toggle button */}
+        <button
+          onClick={toggleMode}
+          title={mode === "expanded" ? "Collapse sidebar" : "Expand sidebar"}
+          className="w-8 h-8 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-200/60 transition-colors shrink-0"
+        >
+          <PanelIcon flipped={mode === "collapsed"} />
+        </button>
+
         {repos.map((repo) => {
           const repoName = repo.full_name.split("/")[1] ?? repo.full_name;
           const isActive = repo.full_name === activeFullName;
@@ -149,6 +160,22 @@ function PlusIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PanelIcon({ flipped }: { flipped: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      style={{ transform: flipped ? "scaleX(-1)" : undefined }}
+      aria-hidden
+    >
+      <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.25" />
+      <line x1="5.5" y1="2.5" x2="5.5" y2="13.5" stroke="currentColor" strokeWidth="1.25" />
     </svg>
   );
 }

@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import RepoSidebar from "@/components/RepoSidebar";
+import SecondarySidebar from "@/components/SecondarySidebar";
+import { SidebarModeProvider } from "@/components/SidebarModeProvider";
 
 export default async function ShellLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -19,9 +21,12 @@ export default async function ShellLayout({ children }: { children: React.ReactN
   }));
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <RepoSidebar initialPinnedRepos={pinnedRepos} />
-      <div className="flex flex-col flex-1 min-w-0">{children}</div>
-    </div>
+    <SidebarModeProvider>
+      <div className="flex min-h-screen bg-gray-50">
+        <RepoSidebar initialPinnedRepos={pinnedRepos} />
+        <SecondarySidebar />
+        <div className="flex flex-col flex-1 min-w-0">{children}</div>
+      </div>
+    </SidebarModeProvider>
   );
 }

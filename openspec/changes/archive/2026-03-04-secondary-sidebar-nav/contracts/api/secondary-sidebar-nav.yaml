@@ -1,0 +1,94 @@
+openapi: "3.0.3"
+info:
+  title: "Secondary Sidebar Navigation API"
+  version: "1.0.0"
+  description: >
+    Provides the project groups and spec list for the secondary sidebar of an active repo.
+    Projects are sourced from the repo's openspec/changes/ directory via the GitHub API.
+
+paths:
+  /api/repos/{encodedFullName}/projects:
+    get:
+      summary: "List project groups and their spec counts for a repo"
+      operationId: "listRepoProjects"
+      description: >
+        Reads the openspec/changes/ directory tree of the connected repo from the GitHub API.
+        Each top-level subdirectory becomes a project group. Spec files inside each change's
+        specs/ subdirectory are counted. Returns an empty projects array if the directory
+        does not exist. Requires an authenticated session.
+      parameters:
+        - name: encodedFullName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: >
+            URL-encoded full repo name, e.g. encodeURIComponent("owner/name") →
+            "owner%2Fname"
+      responses:
+        "200":
+          description: "Project groups retrieved successfully (may be empty)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectsResponse"
+        "401":
+          description: "Not authenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: "Invalid encodedFullName"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    Project:
+      type: object
+      required:
+        - slug
+        - name
+        - specCount
+      properties:
+        slug:
+          type: string
+          description: "Raw directory name from openspec/changes/, e.g. 'repo-sidebar-navigation'"
+          example: "repo-sidebar-navigation"
+        name:
+          type: string
+          description: >
+            Human-readable title derived from the slug: hyphens/underscores replaced with
+            spaces, title-cased. e.g. 'Repo Sidebar Navigation'
+          example: "Repo Sidebar Navigation"
+        specCount:
+          type: integer
+          minimum: 0
+          description: "Number of .md files found in openspec/changes/{slug}/specs/"
+          example: 2
+
+    ProjectsResponse:
+      type: object
+      required:
+        - projects
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+          description: >
+            Ordered list of project groups. Order matches the directory listing from GitHub
+            (alphabetical by slug).
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: "Human-readable error message"
+          example: "Not authenticated"
