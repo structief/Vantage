@@ -30,3 +30,16 @@ model RepoCache {
 
   @@map("repo_cache")
 }
+
+// Spec reference: openspec/changes/repo-sidebar-navigation/specs/feature-repo-sidebar-navigation.md
+// Requirement: Sidebar Cap — Insertion Order
+// One row per user × repo. pinned_at is set once on add; drives display order (ASC) and eviction.
+model PinnedRepo {
+  github_login String
+  full_name    String
+  pinned_at    DateTime @default(now())
+
+  @@id([github_login, full_name])
+  @@index([github_login, pinned_at(sort: Asc)])
+  @@map("pinned_repos")
+}

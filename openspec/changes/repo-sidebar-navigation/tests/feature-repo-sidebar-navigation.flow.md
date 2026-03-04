@@ -1,7 +1,7 @@
 # Test flows: repo-sidebar-navigation
 
-<!-- Generated from specs/feature-repo-sidebar-navigation.md.
-     Each flow maps to a spec scenario. Translated to test code during opsx-apply. -->
+<!-- Generated from specs/feature-repo-sidebar-navigation.md. Each flow maps to a spec scenario.
+     Translated to actual test code during opsx-apply. -->
 
 ---
 
@@ -11,14 +11,14 @@ Spec: specs/feature-repo-sidebar-navigation.md > Requirement: Repo Sidebar
 
 Setup:
 - Authenticated user session exists (github_login = "testuser")
-- Two PinnedRepo rows exist: `testuser/alpha` (last_browsed: 2 min ago) and `testuser/beta` (last_browsed: 5 min ago)
+- Two PinnedRepo rows exist: `testuser/alpha` (pinned_at: 10 min ago) and `testuser/beta` (pinned_at: 5 min ago)
 
 Steps:
 1. Navigate to any shell page (e.g. `/`)
 2. Observe the sidebar
 
 Expected:
-- Sidebar renders two square buttons, `testuser/alpha` first, `testuser/beta` second
+- Sidebar renders two square buttons, `testuser/alpha` first (oldest), `testuser/beta` second (newest)
 - Each button shows the first two uppercase letters of the repo name (AL, BE)
 - Each button has a gradient background
 
@@ -72,48 +72,47 @@ Type: unit
 Spec: specs/feature-repo-sidebar-navigation.md > Requirement: Repo Sidebar
 
 Setup:
-- Render `<RepoPill fullName="acme/my-service" />` in a unit test
+- Import `getRepoInitials(repoName: string): string` from `lib/gradients.ts`
 
 Steps:
-1. Render the component
-2. Query the text content of the square
+1. Call `getRepoInitials("my-service")`
+2. Observe result
 
 Expected:
-- Text content is "MY" (first two letters of repo name "my-service", uppercased)
-- Owner ("acme") is not displayed
+- Returns "MY" (first two letters of "my-service", uppercased)
 
 Edge cases:
-- Repo name is one character ("acme/x") → displays "X" (single letter, no crash)
+- Repo name is one character ("x") → returns "X" (single letter, no crash)
 
 ---
 
-## Flow: Repo moves to top on navigation
+## Flow: Sidebar order is stable on navigation
 Type: e2e
-Spec: specs/feature-repo-sidebar-navigation.md > Requirement: Sidebar Cap — Most Recently Browsed
+Spec: specs/feature-repo-sidebar-navigation.md > Requirement: Sidebar Cap — Insertion Order
 
 Setup:
 - Authenticated user session
-- Two pinned repos: `testuser/alpha` (browsed 10 min ago), `testuser/beta` (browsed 1 min ago)
-- Sidebar order: beta (top), alpha (bottom)
+- Two pinned repos: `testuser/alpha` (pinned_at older), `testuser/beta` (pinned_at newer)
+- Sidebar shows: alpha (top), beta (bottom)
 
 Steps:
-1. Navigate to `/repo/testuser/alpha`
-2. Observe sidebar
+1. Click `testuser/beta` in the sidebar to navigate to it
+2. Observe sidebar order after navigation
 
 Expected:
-- PATCH `/api/pinned-repos/testuser%2Falpha` is called
-- Sidebar re-renders with `alpha` at the top and `beta` below
+- Sidebar order remains: alpha (top), beta (bottom)
+- No re-ordering occurs
 
 ---
 
 ## Flow: Automatic eviction at cap
 Type: contract
-Spec: specs/feature-repo-sidebar-navigation.md > Requirement: Sidebar Cap — Most Recently Browsed
+Spec: specs/feature-repo-sidebar-navigation.md > Requirement: Sidebar Cap — Insertion Order
 See: contracts/api/repo-sidebar-navigation.yaml (POST /api/pinned-repos)
 
 Setup:
 - Authenticated user session (github_login = "testuser")
-- 10 PinnedRepo rows exist for "testuser"; the oldest-browsed is `testuser/old-repo`
+- 10 PinnedRepo rows exist for "testuser"; the oldest-added is `testuser/old-repo`
 - `testuser/new-repo` exists in RepoCache but is not pinned
 
 Steps:
@@ -121,16 +120,16 @@ Steps:
 2. Query all PinnedRepo rows for "testuser"
 
 Expected:
-- Response: 201 `{ full_name: "testuser/new-repo", last_browsed: <now> }`
-- `testuser/old-repo` row is deleted
+- Response: 201 `{ full_name: "testuser/new-repo", pinned_at: <now> }`
+- `testuser/old-repo` row is deleted (oldest pinned_at)
 - Total row count remains 10
-- `testuser/new-repo` is the most-recently-browsed entry
+- `testuser/new-repo` has the most recent `pinned_at`
 
 ---
 
 ## Flow: Picker blocked at cap (+ button still visible)
 Type: e2e
-Spec: specs/feature-repo-sidebar-navigation.md > Requirement: Sidebar Cap — Most Recently Browsed
+Spec: specs/feature-repo-sidebar-navigation.md > Requirement: Sidebar Cap — Insertion Order
 
 Setup:
 - Authenticated user session
@@ -142,7 +141,6 @@ Steps:
 
 Expected:
 - The "+" button is visible and clickable
-- Clicking it opens the repo picker (eviction happens on selection, not on open)
 
 ---
 
@@ -182,7 +180,7 @@ Steps:
 Expected:
 - POST `/api/pinned-repos` called with `{ full_name: "acme/new-repo" }`
 - Picker closes
-- `acme/new-repo` square appears in the sidebar immediately
+- `acme/new-repo` square appears at the bottom of the sidebar
 
 ---
 
@@ -294,7 +292,7 @@ Steps:
 Expected:
 - App navigates to `/repo/acme/api`
 - Main content area displays `<h1>acme/api</h1>` (or equivalent)
-- PATCH `/api/pinned-repos/acme%2Fapi` is called to update last_browsed
+- Sidebar order is unchanged
 
 ---
 
@@ -341,15 +339,15 @@ Spec: specs/feature-repo-sidebar-navigation.md > Requirement: Repo Sidebar
 See: contracts/api/repo-sidebar-navigation.yaml (GET /api/pinned-repos)
 
 Setup:
-- Authenticated session; 3 PinnedRepo rows in DB ordered newest to oldest
+- Authenticated session; 3 PinnedRepo rows in DB ordered by pinned_at ASC
 
 Steps:
 1. GET `/api/pinned-repos`
 
 Expected:
 - 200 response
-- Body matches `PinnedRepoListResponse` schema: `{ pinned_repos: [{ full_name, last_browsed }, ...] }`
-- Array is sorted by `last_browsed` descending
+- Body matches `PinnedRepoListResponse` schema: `{ pinned_repos: [{ full_name, pinned_at }, ...] }`
+- Array is sorted by `pinned_at` ascending (oldest first)
 
 Edge cases:
 - Unauthenticated → 401 `{ message: "..." }`
@@ -369,7 +367,7 @@ Steps:
 
 Expected:
 - 201 response
-- Body matches `PinnedRepo` schema: `{ full_name: "acme/new-repo", last_browsed: <ISO timestamp> }`
+- Body matches `PinnedRepo` schema: `{ full_name: "acme/new-repo", pinned_at: <ISO timestamp> }`
 
 Edge cases:
 - `full_name` not in RepoCache → 400 `{ message: "Repository not found in your repository list." }`
@@ -392,28 +390,6 @@ Steps:
 Expected:
 - 204 response (no body)
 - Row deleted from `pinned_repos` table
-
-Edge cases:
-- Repo not pinned → 404 `{ message: "Repository not found in your sidebar." }`
-- Unauthenticated → 401
-
----
-
-## Flow: Record browse — API contract
-Type: contract
-Spec: specs/feature-repo-sidebar-navigation.md > Requirement: Repo Context Switching
-See: contracts/api/repo-sidebar-navigation.yaml (PATCH /api/pinned-repos/{encodedFullName})
-
-Setup:
-- Authenticated session; `acme/api` is pinned with old last_browsed timestamp
-
-Steps:
-1. PATCH `/api/pinned-repos/acme%2Fapi`
-
-Expected:
-- 200 response
-- Body: `{ full_name: "acme/api", last_browsed: <new ISO timestamp> }`
-- `last_browsed` in DB is updated to approximately now
 
 Edge cases:
 - Repo not pinned → 404 `{ message: "Repository not found in your sidebar." }`

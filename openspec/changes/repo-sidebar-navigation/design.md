@@ -58,33 +58,34 @@ New model added to `prisma/schema.prisma`:
 model PinnedRepo {
   github_login  String
   full_name     String
-  last_browsed  DateTime @default(now())
+  pinned_at     DateTime @default(now())
 
   @@id([github_login, full_name])
+  @@index([github_login, pinned_at(sort: Asc)])
   @@map("pinned_repos")
 }
 ```
 
-`last_browsed` is updated on every navigation to the repo and is used to order the sidebar (descending) and to determine eviction when the 10-repo cap is reached. `pinned_order` is derived at query time (`ORDER BY last_browsed DESC`) — no stored integer needed.
+`pinned_at` is set once when the repo is added and is never updated. It drives both display order (`ORDER BY pinned_at ASC`) and eviction (oldest `pinned_at` is removed when cap is reached). The PATCH-to-record-browse endpoint is removed — navigation no longer changes sidebar state.
 
 New API endpoints needed:
-- `GET /api/pinned-repos` — returns the authenticated user's pinned repos ordered by `pinned_order`
-- `POST /api/pinned-repos` — body `{ full_name: string }` — appends a repo to the end of the list
-- `DELETE /api/pinned-repos/[full_name]` — removes a pinned repo; `full_name` is double-URL-encoded (`owner%2Frepo`)
+- `GET /api/pinned-repos` — returns the authenticated user's pinned repos ordered by `pinned_at ASC`
+- `POST /api/pinned-repos` — body `{ full_name: string }` — pins a repo; evicts oldest if at cap
+- `DELETE /api/pinned-repos/[encodedFullName]` — removes a pinned repo; `full_name` is URL-encoded (`owner%2Frepo`)
 
 ## API changes
 
 `GET /api/pinned-repos`
 - Auth required (401 if unauthenticated)
-- Response: `{ pinned_repos: Array<{ full_name: string; pinned_order: number }> }`
+- Response: `{ pinned_repos: Array<{ full_name: string; pinned_at: string }> }`
 
 `POST /api/pinned-repos`
 - Body: `{ full_name: string }`
 - Validates `full_name` is in the user's `RepoCache`; 400 if not found or already pinned
-- Response: `201 { full_name, pinned_order }`
+- Response: `201 { full_name, pinned_at }`
 
 `DELETE /api/pinned-repos/[encodedFullName]`
-- Removes the row; recalculates `pinned_order` for remaining rows (compact sequence)
+- Removes the row
 - Response: `204`
 
 ## Risks / Trade-offs
@@ -95,5 +96,5 @@ New API endpoints needed:
 
 ## Open Questions
 
-- ~~Should the sidebar support more than ~15 pinned repos, or should we cap it (with a scroll)?~~ **Resolved**: Cap at the 10 most recently browsed repos. When a user navigates to a repo it moves to the top of the list; if there are already 10 pinned repos, the least-recently-browsed one is evicted automatically.
+- ~~Should the sidebar support more than ~15 pinned repos, or should we cap it (with a scroll)?~~ **Resolved**: Cap at 10 repos. Display order is insertion order (`pinned_at ASC`) — stable, never reordered by navigation. Eviction on add removes the oldest-added repo.
 - ~~Should removing the last pinned repo redirect to `/`?~~ **Resolved**: Always redirect to `/` when the active repo is removed.

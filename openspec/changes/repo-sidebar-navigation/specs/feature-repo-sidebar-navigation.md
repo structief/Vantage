@@ -5,7 +5,7 @@ The application SHALL display a persistent vertical sidebar containing user-pinn
 
 #### Scenario: Sidebar renders pinned repos
 - **WHEN** the user is authenticated and has pinned at least one repository
-- **THEN** the sidebar SHALL display one square button per pinned repo, each showing the first two letters of the repo name over its assigned gradient, in the order they were pinned
+- **THEN** the sidebar SHALL display one square button per pinned repo, each showing the first two letters of the repo name over its assigned gradient, ordered by the date the repo was added (oldest at top, newest at bottom)
 
 #### Scenario: No pinned repos
 - **WHEN** the user is authenticated and has pinned no repositories
@@ -19,20 +19,20 @@ The application SHALL display a persistent vertical sidebar containing user-pinn
 - **WHEN** a repo button is rendered in the sidebar
 - **THEN** it SHALL display exactly the first two letters of the repository name (not the owner), uppercase, centered within the square
 
-### Requirement: Sidebar Cap — Most Recently Browsed
-The sidebar SHALL display at most 10 repositories, ordered by most recently browsed (navigated to) first. When the user navigates to a repo it SHALL move to the top of the sidebar list. When a new repo is added and the sidebar already contains 10 repos, the least-recently-browsed repo SHALL be evicted automatically without user confirmation.
+### Requirement: Sidebar Cap — Insertion Order
+The sidebar SHALL display at most 10 repositories, ordered by the date each repo was added (oldest first, stable). The sidebar order SHALL NOT change when the user navigates to a repo. When a new repo is added and the sidebar already contains 10 repos, the least-recently-added repo SHALL be evicted automatically without user confirmation.
 
-#### Scenario: Repo moves to top on navigation
+#### Scenario: Sidebar order is stable on navigation
 - **WHEN** the user navigates to a repo already in the sidebar
-- **THEN** that repo SHALL move to the top of the sidebar list immediately
+- **THEN** the sidebar order SHALL remain unchanged
 
 #### Scenario: Automatic eviction at cap
 - **WHEN** the user adds a repo and the sidebar already contains 10 repos
-- **THEN** the least-recently-browsed repo SHALL be removed from the sidebar and the newly added repo SHALL appear at the top
+- **THEN** the oldest-added repo SHALL be removed from the sidebar and the newly added repo SHALL appear at the bottom of the list
 
 #### Scenario: Picker blocked at cap
 - **WHEN** the sidebar already contains 10 repos
-- **THEN** the "+" button SHALL remain visible so users can still add repos (triggering eviction of the oldest)
+- **THEN** the "+" button SHALL remain visible so users can still add repos (triggering eviction of the oldest-added)
 
 ### Requirement: Add Repo to Sidebar
 The application SHALL allow the user to add a repository from their GitHub-accessible repository list to the sidebar via a picker UI triggered from the sidebar's "+" button.

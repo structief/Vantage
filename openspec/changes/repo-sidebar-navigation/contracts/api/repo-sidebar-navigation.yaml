@@ -1,15 +1,15 @@
 openapi: "3.0.3"
 info:
   title: "Repo Sidebar Navigation API"
-  version: "1.0.0"
-  description: "Endpoints for managing the user's pinned repository sidebar."
+  version: "2.0.0"
+  description: "Endpoints for managing the user's pinned repository sidebar. Repos are ordered by insertion date (pinned_at ASC), never reordered by navigation."
 
 paths:
   /api/pinned-repos:
     get:
       summary: "List pinned repos"
       operationId: "listPinnedRepos"
-      description: "Returns the authenticated user's pinned repos ordered by last_browsed descending (most recently browsed first). Maximum 10 results."
+      description: "Returns the authenticated user's pinned repos ordered by pinned_at ascending (oldest first). Maximum 10 results."
       responses:
         "200":
           description: "Pinned repos retrieved"
@@ -27,7 +27,7 @@ paths:
     post:
       summary: "Pin a repo"
       operationId: "pinRepo"
-      description: "Adds a repository to the user's sidebar. The repo must exist in the user's RepoCache. If the sidebar already contains 10 repos, the least-recently-browsed repo is evicted automatically."
+      description: "Adds a repository to the user's sidebar. The repo must exist in the user's RepoCache. If the sidebar already contains 10 repos, the oldest-added repo is evicted automatically. The newly added repo appears at the bottom of the sidebar."
       requestBody:
         required: true
         content:
@@ -58,7 +58,7 @@ paths:
     delete:
       summary: "Remove a pinned repo"
       operationId: "unpinRepo"
-      description: "Removes a repo from the user's sidebar. encodedFullName is the double-URL-encoded full_name (owner%2Frepo)."
+      description: "Removes a repo from the user's sidebar. encodedFullName is the URL-encoded full_name (owner%2Frepo)."
       parameters:
         - name: encodedFullName
           in: path
@@ -82,53 +82,22 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-    patch:
-      summary: "Record a browse event"
-      operationId: "recordRepoBrowse"
-      description: "Updates last_browsed to now for the given pinned repo, moving it to the top of the sidebar. Called by the client whenever the user navigates to a repo page."
-      parameters:
-        - name: encodedFullName
-          in: path
-          required: true
-          schema:
-            type: string
-          description: "URL-encoded full_name of the repo (e.g. owner%2Frepo)"
-      responses:
-        "200":
-          description: "Browse recorded"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PinnedRepo"
-        "401":
-          description: "Unauthenticated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: "Repo not pinned"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
 components:
   schemas:
     PinnedRepo:
       type: object
       required:
         - full_name
-        - last_browsed
+        - pinned_at
       properties:
         full_name:
           type: string
           description: "Owner/repo identifier, e.g. 'acme/api'"
           example: "acme/api"
-        last_browsed:
+        pinned_at:
           type: string
           format: date-time
-          description: "ISO 8601 timestamp of the last time this repo was navigated to"
+          description: "ISO 8601 timestamp of when this repo was added to the sidebar. Never changes."
 
     PinnedRepoListResponse:
       type: object
@@ -140,6 +109,7 @@ components:
           maxItems: 10
           items:
             $ref: "#/components/schemas/PinnedRepo"
+          description: "Ordered by pinned_at ascending (oldest first)."
 
     PinRepoRequest:
       type: object
