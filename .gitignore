@@ -6,7 +6,17 @@
 .env.test.local
 .env.production.local
 .idea
-.vantage
+
+# Local SQLite database
+.vantage/
+
+# Next.js build output
+.next/
+out/
 
 # Node modules
 node_modules
+
+# Playwright test results
+playwright-report/
+test-results/
