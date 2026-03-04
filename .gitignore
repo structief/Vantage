@@ -7,3 +7,6 @@
 .env.production.local
 .idea
 .vantage
+
+# Node modules
+node_modules
