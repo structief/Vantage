@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "github-spec-content",
+  "title": "GitHub API response shapes consumed by the spec detail view",
+  "description": "Documents only the fields actually used by Vantage when rendering a spec detail page. Source: GitHub REST API v3.",
+
+  "definitions": {
+    "FileContent": {
+      "$id": "#FileContent",
+      "description": "Response shape from GET /repos/{owner}/{repo}/contents/{path} when path is a file. Used to retrieve the spec markdown content.",
+      "type": "object",
+      "required": ["type", "content", "encoding", "name", "path"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["file"],
+          "description": "Must be 'file'; if 'dir' the path resolves to a directory and Vantage returns a not-found state."
+        },
+        "name": {
+          "type": "string",
+          "description": "Filename including extension, e.g. 'feature-spec-detail-view.md'."
+        },
+        "path": {
+          "type": "string",
+          "description": "Full path within the repo, e.g. 'openspec/changes/spec-detail-view/specs/feature-spec-detail-view.md'."
+        },
+        "content": {
+          "type": "string",
+          "description": "Base64-encoded file content. Vantage decodes this with Buffer.from(content, 'base64').toString('utf-8')."
+        },
+        "encoding": {
+          "type": "string",
+          "enum": ["base64"],
+          "description": "Always 'base64' for file blobs from the GitHub API."
+        }
+      }
+    },
+
+    "DirectoryListing": {
+      "$id": "#DirectoryListing",
+      "description": "Response shape from GET /repos/{owner}/{repo}/contents/{path} when path is a directory. Used to list contracts/ and tests/ files.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "name", "path"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["file", "dir"],
+            "description": "Vantage only surfaces entries with type 'file'."
+          },
+          "name": {
+            "type": "string",
+            "description": "Filename, e.g. 'spec-detail-view.yaml'."
+          },
+          "path": {
+            "type": "string",
+            "description": "Full path within the repo."
+          }
+        }
+      }
+    },
+
+    "CommitSummary": {
+      "$id": "#CommitSummary",
+      "description": "First element of the response from GET /repos/{owner}/{repo}/commits?path={specPath}&per_page=1. Used to extract last committer identity and date.",
+      "type": "object",
+      "required": ["commit", "author"],
+      "properties": {
+        "commit": {
+          "type": "object",
+          "required": ["author"],
+          "properties": {
+            "author": {
+              "type": "object",
+              "required": ["name", "date"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Git author name (display name from the commit metadata)."
+                },
+                "date": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "ISO 8601 commit date. Vantage formats this as 'Updated [Month] [Day], [Year]'."
+                }
+              }
+            }
+          }
+        },
+        "author": {
+          "type": ["object", "null"],
+          "description": "GitHub user object for the committer. May be null if the git email is not associated with a GitHub account.",
+          "properties": {
+            "login": {
+              "type": "string",
+              "description": "GitHub username, e.g. 'koeneveraert'. Displayed in the title section."
+            },
+            "avatar_url": {
+              "type": "string",
+              "format": "uri",
+              "description": "URL of the GitHub user's avatar image. Displayed alongside the username in the title section."
+            }
+          }
+        }
+      }
+    }
+  }
+}
