@@ -1,0 +1,172 @@
+openapi: "3.0.3"
+info:
+  title: "Repo Specs Listing API"
+  version: "1.0.0"
+  description: >
+    Provides the full grouped spec listing for a connected repo's All Specs page,
+    and fetches raw content of individual spec files for the spec detail view.
+    Both endpoints source data from the repo's openspec/ directory via the GitHub API.
+
+paths:
+  /api/repos/{encodedFullName}/specs:
+    get:
+      summary: "List all spec files in a repo's openspec directory, grouped by project"
+      operationId: "listRepoSpecs"
+      description: >
+        Scans openspec/changes/ recursively (one level of subdirectory grouping supported).
+        Returns one entry per spec .md file found inside each change's specs/ subdirectory.
+        Active specs (changes directly under openspec/changes/) have group: null and status: "active".
+        Specs inside openspec/changes/archive/ have group: "archive" and status: "archived".
+        Specs inside any other subdirectory (e.g. openspec/changes/auth/) have group set to
+        the subdirectory name and status: "active".
+        Returns an empty array if openspec/changes/ does not exist. Requires an authenticated session.
+      parameters:
+        - name: encodedFullName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: >
+            URL-encoded full repo name, e.g. encodeURIComponent("owner/name") → "owner%2Fname"
+      responses:
+        "200":
+          description: "Spec listing retrieved successfully (may be empty)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpecsListResponse"
+        "401":
+          description: "Not authenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: "Invalid encodedFullName"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/repos/{encodedFullName}/spec-content:
+    get:
+      summary: "Fetch the raw text content of a single spec file"
+      operationId: "getSpecContent"
+      description: >
+        Fetches the raw content of the spec file at the given path within the connected repo.
+        The first line starting with '# ' is treated as the spec's title. If no such line exists,
+        the caller should fall back to the slug as the title.
+        Requires an authenticated session.
+      parameters:
+        - name: encodedFullName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "URL-encoded full repo name, e.g. encodeURIComponent('owner/name')"
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
+          description: >
+            URL-encoded path to the spec file within the repo,
+            e.g. "openspec/changes/secondary-sidebar-nav/specs/feature-secondary-sidebar-nav.md"
+      responses:
+        "200":
+          description: "File content retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpecContentResponse"
+        "404":
+          description: "File not found at the given path"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Not authenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: "Missing or invalid path query parameter"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    SpecEntry:
+      type: object
+      required:
+        - slug
+        - group
+        - path
+        - status
+      properties:
+        slug:
+          type: string
+          description: >
+            Spec filename without the .md extension,
+            e.g. "feature-secondary-sidebar-nav"
+          example: "feature-secondary-sidebar-nav"
+        group:
+          type: string
+          nullable: true
+          description: >
+            Project group name derived from the subdirectory that contains this change.
+            null for active specs directly under openspec/changes/.
+            "archive" for specs under openspec/changes/archive/.
+            Subdirectory name for any other grouping.
+          example: null
+        path:
+          type: string
+          description: >
+            Full path to the spec file within the repo,
+            e.g. "openspec/changes/secondary-sidebar-nav/specs/feature-secondary-sidebar-nav.md"
+          example: "openspec/changes/secondary-sidebar-nav/specs/feature-secondary-sidebar-nav.md"
+        status:
+          type: string
+          enum:
+            - active
+            - archived
+          description: >
+            "active" for specs not under the archive subdirectory;
+            "archived" for specs under openspec/changes/archive/
+
+    SpecsListResponse:
+      type: object
+      required:
+        - specs
+      properties:
+        specs:
+          type: array
+          items:
+            $ref: "#/components/schemas/SpecEntry"
+          description: >
+            Flat list of all spec entries. Order: ungrouped active specs first,
+            then named groups alphabetically, then archived last.
+
+    SpecContentResponse:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: "Raw text content of the spec file"
+          example: "## ADDED Requirements\n\n### Requirement: ..."
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: "Human-readable error message"
+          example: "Not authenticated"
