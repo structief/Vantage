@@ -1,0 +1,32 @@
+// Spec reference: openspec/changes/github-auth-repo-access/specs/feature-github-auth-repo-access.md
+// Migration: 001_add_user_profile_and_repo_cache
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Upserted on every successful GitHub OAuth login.
+// Persists display name and avatar so nav header renders after server restart.
+model UserProfile {
+  github_login String   @id
+  name         String
+  avatar_url   String
+  updated_at   DateTime @updatedAt
+
+  @@map("user_profiles")
+}
+
+// One row per authenticated user. Overwritten on each cache refresh.
+// repositories stores JSON-serialised CachedRepository[] (max 1000).
+model RepoCache {
+  github_login String   @id
+  fetched_at   DateTime
+  repositories String
+
+  @@map("repo_cache")
+}

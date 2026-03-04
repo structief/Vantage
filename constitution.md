@@ -42,7 +42,7 @@ Vantage is a lightweight React + Next.js application that gives teams a structur
 ---
 
 ## User interface
-Style Category: Modern SaaS / Productivity UI — Clean Utilitarian with Premium Restraint. Use ShadCN or Tailwind.
+Style Category: Modern SaaS / Productivity UI — Clean Utilitarian with Premium Restraint
 
 ### Typography
 
