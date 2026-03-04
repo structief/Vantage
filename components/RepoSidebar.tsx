@@ -85,7 +85,7 @@ export default function RepoSidebar({ initialPinnedRepos }: Props) {
 
   return (
     <>
-      <aside className="flex flex-col items-center w-14 py-3 gap-2 bg-white border-r border-gray-100 shrink-0">
+      <aside className="flex flex-col items-center w-[68px] py-5 gap-5 bg-[#f7f7f8] border-r border-gray-100 shrink-0">
         {repos.map((repo) => {
           const repoName = repo.full_name.split("/")[1] ?? repo.full_name;
           const isActive = repo.full_name === activeFullName;
@@ -95,10 +95,13 @@ export default function RepoSidebar({ initialPinnedRepos }: Props) {
               onClick={() => handleRepoClick(repo.full_name)}
               onContextMenu={(e) => handleContextMenu(e, repo.full_name)}
               title={repo.full_name}
-              className={`relative w-9 h-9 rounded-lg flex items-center justify-center text-white text-xs font-semibold shrink-0 transition-transform hover:scale-105 focus:outline-none ${
-                isActive ? "ring-2 ring-offset-2 ring-gray-900" : ""
-              }`}
-              style={{ background: getRepoGradient(repo.full_name) }}
+              className="relative w-[40px] h-[40px] rounded-lg flex items-center justify-center text-white text-sm font-semibold shrink-0 transition-all hover:scale-105 focus:outline-none"
+              style={{
+                background: getRepoGradient(repo.full_name),
+                boxShadow: isActive
+                  ? "0 0 0 3px white, 0 4px 12px rgba(0,0,0,0.18)"
+                  : "0 1px 3px rgba(0,0,0,0.10)",
+              }}
             >
               {getRepoInitials(repoName)}
             </button>
@@ -108,7 +111,7 @@ export default function RepoSidebar({ initialPinnedRepos }: Props) {
         <button
           onClick={() => setPickerOpen(true)}
           title="Add repository"
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 border border-dashed border-gray-300 hover:border-gray-400 hover:text-gray-600 transition-colors mt-1 shrink-0"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 bg-white border border-dashed border-gray-300 hover:border-gray-400 hover:text-gray-500 transition-all mt-1 shrink-0"
         >
           <PlusIcon />
         </button>
