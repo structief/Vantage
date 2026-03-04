@@ -1,0 +1,20 @@
+// Migration note: Add PinnedRepo table to persist the user's sidebar repo list.
+//   Repos are ordered by last_browsed DESC. Capped at 10 per user; eviction of the
+//   least-recently-browsed entry is enforced at the application layer (not a DB constraint).
+// Spec reference: specs/feature-repo-sidebar-navigation.md
+
+// -- DELTA ONLY --
+// The models below are NEW. Merge into the project's prisma/schema.prisma.
+// Existing models (UserProfile, RepoCache) are unchanged.
+
+// Requirement: Repo Sidebar / Sidebar Cap — Most Recently Browsed
+// One row per user × repo combination. last_browsed drives sidebar order and eviction.
+model PinnedRepo {
+  github_login String
+  full_name    String
+  last_browsed DateTime @default(now())
+
+  @@id([github_login, full_name])
+  @@index([github_login, last_browsed(sort: Desc)])
+  @@map("pinned_repos")
+}

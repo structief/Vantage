@@ -1,0 +1,161 @@
+openapi: "3.0.3"
+info:
+  title: "Repo Sidebar Navigation API"
+  version: "1.0.0"
+  description: "Endpoints for managing the user's pinned repository sidebar."
+
+paths:
+  /api/pinned-repos:
+    get:
+      summary: "List pinned repos"
+      operationId: "listPinnedRepos"
+      description: "Returns the authenticated user's pinned repos ordered by last_browsed descending (most recently browsed first). Maximum 10 results."
+      responses:
+        "200":
+          description: "Pinned repos retrieved"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PinnedRepoListResponse"
+        "401":
+          description: "Unauthenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      summary: "Pin a repo"
+      operationId: "pinRepo"
+      description: "Adds a repository to the user's sidebar. The repo must exist in the user's RepoCache. If the sidebar already contains 10 repos, the least-recently-browsed repo is evicted automatically."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PinRepoRequest"
+      responses:
+        "201":
+          description: "Repo pinned"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PinnedRepo"
+        "400":
+          description: "Repo not found in cache or already pinned"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Unauthenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/pinned-repos/{encodedFullName}:
+    delete:
+      summary: "Remove a pinned repo"
+      operationId: "unpinRepo"
+      description: "Removes a repo from the user's sidebar. encodedFullName is the double-URL-encoded full_name (owner%2Frepo)."
+      parameters:
+        - name: encodedFullName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "URL-encoded full_name of the repo (e.g. owner%2Frepo)"
+      responses:
+        "204":
+          description: "Repo removed"
+        "401":
+          description: "Unauthenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Repo not found in pinned list"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      summary: "Record a browse event"
+      operationId: "recordRepoBrowse"
+      description: "Updates last_browsed to now for the given pinned repo, moving it to the top of the sidebar. Called by the client whenever the user navigates to a repo page."
+      parameters:
+        - name: encodedFullName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "URL-encoded full_name of the repo (e.g. owner%2Frepo)"
+      responses:
+        "200":
+          description: "Browse recorded"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PinnedRepo"
+        "401":
+          description: "Unauthenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Repo not pinned"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    PinnedRepo:
+      type: object
+      required:
+        - full_name
+        - last_browsed
+      properties:
+        full_name:
+          type: string
+          description: "Owner/repo identifier, e.g. 'acme/api'"
+          example: "acme/api"
+        last_browsed:
+          type: string
+          format: date-time
+          description: "ISO 8601 timestamp of the last time this repo was navigated to"
+
+    PinnedRepoListResponse:
+      type: object
+      required:
+        - pinned_repos
+      properties:
+        pinned_repos:
+          type: array
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/PinnedRepo"
+
+    PinRepoRequest:
+      type: object
+      required:
+        - full_name
+      properties:
+        full_name:
+          type: string
+          description: "Owner/repo identifier of the repo to pin"
+          example: "acme/api"
+
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: "Human-readable error description"

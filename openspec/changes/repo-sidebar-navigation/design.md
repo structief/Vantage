@@ -56,15 +56,16 @@ New model added to `prisma/schema.prisma`:
 
 ```
 model PinnedRepo {
-  github_login String
-  full_name    String
-  pinned_order Int
-  pinned_at    DateTime @default(now())
+  github_login  String
+  full_name     String
+  last_browsed  DateTime @default(now())
 
   @@id([github_login, full_name])
   @@map("pinned_repos")
 }
 ```
+
+`last_browsed` is updated on every navigation to the repo and is used to order the sidebar (descending) and to determine eviction when the 10-repo cap is reached. `pinned_order` is derived at query time (`ORDER BY last_browsed DESC`) — no stored integer needed.
 
 New API endpoints needed:
 - `GET /api/pinned-repos` — returns the authenticated user's pinned repos ordered by `pinned_order`
@@ -94,5 +95,5 @@ New API endpoints needed:
 
 ## Open Questions
 
-- Should the sidebar support more than ~15 pinned repos, or should we cap it (with a scroll)? Assume uncapped with overflow scroll for now.
-- Should removing the last pinned repo redirect to `/` automatically, or leave the user on the now-removed repo route? Spec says redirect to neutral state; implement as `router.push('/')`.
+- ~~Should the sidebar support more than ~15 pinned repos, or should we cap it (with a scroll)?~~ **Resolved**: Cap at the 10 most recently browsed repos. When a user navigates to a repo it moves to the top of the list; if there are already 10 pinned repos, the least-recently-browsed one is evicted automatically.
+- ~~Should removing the last pinned repo redirect to `/`?~~ **Resolved**: Always redirect to `/` when the active repo is removed.

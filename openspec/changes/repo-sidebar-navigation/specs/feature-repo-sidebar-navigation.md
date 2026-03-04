@@ -19,6 +19,21 @@ The application SHALL display a persistent vertical sidebar containing user-pinn
 - **WHEN** a repo button is rendered in the sidebar
 - **THEN** it SHALL display exactly the first two letters of the repository name (not the owner), uppercase, centered within the square
 
+### Requirement: Sidebar Cap — Most Recently Browsed
+The sidebar SHALL display at most 10 repositories, ordered by most recently browsed (navigated to) first. When the user navigates to a repo it SHALL move to the top of the sidebar list. When a new repo is added and the sidebar already contains 10 repos, the least-recently-browsed repo SHALL be evicted automatically without user confirmation.
+
+#### Scenario: Repo moves to top on navigation
+- **WHEN** the user navigates to a repo already in the sidebar
+- **THEN** that repo SHALL move to the top of the sidebar list immediately
+
+#### Scenario: Automatic eviction at cap
+- **WHEN** the user adds a repo and the sidebar already contains 10 repos
+- **THEN** the least-recently-browsed repo SHALL be removed from the sidebar and the newly added repo SHALL appear at the top
+
+#### Scenario: Picker blocked at cap
+- **WHEN** the sidebar already contains 10 repos
+- **THEN** the "+" button SHALL remain visible so users can still add repos (triggering eviction of the oldest)
+
 ### Requirement: Add Repo to Sidebar
 The application SHALL allow the user to add a repository from their GitHub-accessible repository list to the sidebar via a picker UI triggered from the sidebar's "+" button.
 
@@ -47,7 +62,7 @@ The application SHALL allow the user to remove a pinned repository from the side
 
 #### Scenario: Confirming removal
 - **WHEN** the user selects "Remove from sidebar" from the context menu
-- **THEN** the repo SHALL be removed from the sidebar immediately, and if it was the active repo, the application SHALL navigate to a neutral state (no active repo)
+- **THEN** the repo SHALL be removed from the sidebar immediately, and if it was the active repo, the application SHALL redirect to `/`
 
 ### Requirement: Repo Context Switching
 The application SHALL switch the active repository context when the user clicks a repo button in the sidebar.
