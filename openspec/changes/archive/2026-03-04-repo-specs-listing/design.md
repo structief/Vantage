@@ -11,13 +11,13 @@ The existing `GET /api/repos/[encodedFullName]/projects` endpoint scans `openspe
 ## Goals / Non-Goals
 
 **Goals:**
-- Build out the All Specs page (`/repo/[owner]/[name]/specs`) to show a full spec listing grouped by project group where applicable
-- Show both active specs (changes directly under `openspec/changes/`) and archived specs (changes under `openspec/changes/archive/`) with visual distinction
-- Render each spec item with a document icon and its slug
-- Create a new spec detail page (`/repo/[owner]/[name]/specs/[slug]`) that shows the spec's slug and its title (extracted from the first `# Heading` in the file, with fallback to slug)
-- Add a new API endpoint that returns the full grouped spec listing
+- Add `GET /api/repos/[encodedFullName]/specs` — returns all spec `.md` files from the repo's `openspec/changes/` directory with grouping and status metadata; consumed by the secondary sidebar
+- Add `GET /api/repos/[encodedFullName]/spec-content?path=` — returns raw content of a single spec file; consumed by the spec detail page
+- Create the spec detail page (`/repo/[owner]/[name]/specs/[slug]`) that shows the spec's slug and its title (extracted from the first `# Heading` in the file, with fallback to slug)
+- Extract `DocIcon` to a shared component
 
 **Non-Goals:**
+- Rendering a spec list on the All Specs page (spec listing lives in the secondary sidebar — see `secondary-sidebar-nav` change)
 - Full spec content rendering (markdown viewer) — deferred
 - Editable spec content
 - Real-time updates; a page load is sufficient
@@ -52,9 +52,9 @@ The existing `GET /api/repos/[encodedFullName]/projects` endpoint scans `openspe
 **Why**: Keeps the GitHub access token server-side. The detail page is a server component that can call this endpoint during render, or a client component using SWR.
 **Alternatives**: Client-side direct GitHub raw URL — requires exposing the access token to the browser; rejected. GitHub raw.githubusercontent.com for public repos only — does not work for private repos; rejected.
 
-### Decision: `SpecsPage` as a server component with a client list child
-**Choice**: Keep `SpecsPage` as a Next.js server component. Extract the interactive spec list into a `SpecsListClient.tsx` client component that fetches `/api/repos/.../specs` with SWR, renders the grouped list, and links each item to the detail page.
-**Why**: Follows the existing pattern in `SecondarySidebar` (client component, SWR for data). The server component handles the repo params; the client component handles interactivity, loading states, and navigation highlighting.
+### Decision: Spec listing rendered in the secondary sidebar, not on the All Specs page
+**Choice**: The `/specs` API is consumed by `SecondarySidebar.tsx`, which fetches it in parallel with `/projects` and renders the spec file list inside each expanded project group. The `SpecsPage` at `/repo/[owner]/[name]/specs` shows only a prompt directing the user to the sidebar.
+**Why**: Placing the spec list in the sidebar gives the user persistent navigation context while the main content area is dedicated to the spec detail. A separate list panel on the page would duplicate the sidebar and waste layout space.
 
 ---
 

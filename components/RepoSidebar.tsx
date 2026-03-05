@@ -106,12 +106,13 @@ export default function RepoSidebar({ initialPinnedRepos }: Props) {
               onClick={() => handleRepoClick(repo.full_name)}
               onContextMenu={(e) => handleContextMenu(e, repo.full_name)}
               title={repo.full_name}
-              className="relative w-[40px] h-[40px] rounded-lg flex items-center justify-center text-white text-sm font-semibold shrink-0 transition-all hover:scale-105 focus:outline-none"
+              aria-current={isActive ? "page" : undefined}
+              className="relative w-[36px] h-[36px] rounded-lg flex items-center justify-center text-white text-sm font-semibold shrink-0 transition-all hover:scale-105 focus:outline-none"
               style={{
                 background: getRepoGradient(repo.full_name),
                 boxShadow: isActive
-                  ? "0 0 0 3px white, 0 4px 12px rgba(0,0,0,0.18)"
-                  : "0 1px 3px rgba(0,0,0,0.10)",
+                  ? "0 0 0 3px white, 0 4px 12px rgba(0,0,0,0.10)"
+                  : "0 1px 3px rgba(0,0,0,0.05)",
               }}
             >
               {getRepoInitials(repoName)}

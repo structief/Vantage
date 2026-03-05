@@ -21,7 +21,16 @@ function isSameOrigin(url: string, requestUrl: string): boolean {
 export default auth((req: NextRequest & { auth?: unknown }) => {
   const { pathname, searchParams } = req.nextUrl;
 
-  if (isPublic(pathname)) return NextResponse.next();
+  if (isPublic(pathname)) {
+    // Strip open-redirect attempts from callbackUrl even on the login page
+    const callbackUrl = searchParams.get("callbackUrl");
+    if (callbackUrl && !isSameOrigin(callbackUrl, req.url)) {
+      const safeUrl = new URL(req.url);
+      safeUrl.searchParams.delete("callbackUrl");
+      return NextResponse.redirect(safeUrl);
+    }
+    return NextResponse.next();
+  }
 
   const session = (req as { auth?: { user?: unknown } }).auth;
   if (!session) {

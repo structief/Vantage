@@ -9,9 +9,14 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
+  globalSetup: "./tests/e2e/global-setup.ts",
+  globalTeardown: "./tests/e2e/global-teardown.ts",
   use: {
     baseURL,
     trace: "on-first-retry",
+    // All tests start authenticated by default; unauthenticated tests override
+    // with test.use({ storageState: undefined }) or test.use({ storageState: { cookies: [], origins: [] } })
+    storageState: "tests/e2e/.auth/user.json",
   },
   projects: [
     {
@@ -19,12 +24,10 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: process.env.CI
-    ? {
-        command: "npm run start",
-        url: baseURL,
-        reuseExistingServer: false,
-        timeout: 120_000,
-      }
-    : undefined,
+  webServer: {
+    command: "npm run dev",
+    url: baseURL,
+    reuseExistingServer: true,
+    timeout: 120_000,
+  },
 });

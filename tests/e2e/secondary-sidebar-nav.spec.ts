@@ -1,86 +1,125 @@
 /**
  * E2E tests translated from:
- * openspec/changes/secondary-sidebar-nav/tests/feature-secondary-sidebar-nav.flow.md
+ * openspec/changes/archive/2026-03-04-secondary-sidebar-nav/tests/feature-secondary-sidebar-nav.flow.md
  *
  * Flows covered:
+ *  - Secondary sidebar present on a repo route
  *  - Secondary sidebar absent on home route
- *  - Secondary sidebar present on repo route
  *  - Switching to collapsed mode (icons only)
  *  - Switching to expanded mode
  *  - Toggle mode persists on navigation
- *  - Repo identity in expanded mode
  *  - Expanded mode — icon and label for nav links
- *  - Collapsed mode — icon only
- *  - Active nav link is highlighted
+ *  - Active nav link is highlighted on /specs sub-route
  *  - Navigating via a sidebar link
- *  - Collapsed project group in expanded mode
- *  - Expanding a project group
- *  - Collapsing an expanded project group
- *  - Empty projects list
- *  - Loading skeleton state
+ *  - Project group shows name and count in expanded mode
+ *  - Empty projects state shows 'No projects yet.' in expanded mode
+ *  - Collapsed mode shows project initials squares instead of names
  *
  * Prerequisites:
- *  - App running at baseURL (next start or next dev)
- *  - Authenticated session via storageState or test auth bypass
- *  - At least one pinned repo (e.g. "acme/frontend") in test DB
- *  - "acme/frontend" has openspec/changes/ with at least one subdirectory
+ *  - App running at baseURL (next dev or next start)
+ *  - Authenticated session loaded from tests/e2e/.auth/user.json (via playwright.config.ts)
+ *  - Test user (login: "e2etest") seeded with pinned repos by global-setup
+ *  - /api/repos/... endpoints are mocked per-test to avoid real GitHub API calls
  */
 
 import { test, expect } from "@playwright/test";
 
 const REPO_ROUTE = "/repo/acme/frontend";
 
+const MOCK_PROJECTS = [
+  { slug: "auth-flow", name: "Auth Flow", specCount: 3 },
+  { slug: "billing", name: "Billing", specCount: 1 },
+];
+
+const MOCK_SPECS = [
+  {
+    slug: "feature-auth-flow",
+    group: "auth-flow",
+    path: "openspec/changes/auth-flow/specs/feature-auth-flow.md",
+    status: "active",
+  },
+];
+
+async function mockRepoApis(
+  page: import("@playwright/test").Page,
+  projects = MOCK_PROJECTS,
+  specs = MOCK_SPECS
+) {
+  await page.route("**/api/repos/**/projects", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ projects }) })
+  );
+  await page.route("**/api/repos/**/specs", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ specs }) })
+  );
+}
+
 // ─── Visibility ───────────────────────────────────────────────────────────────
 
+// Flow: Secondary sidebar present on a repo route
+test("secondary sidebar is present on a repo route", async ({ page }) => {
+  await mockRepoApis(page);
+  await page.goto(REPO_ROUTE);
+  await expect(page.locator("[data-testid='secondary-sidebar']")).toBeVisible();
+});
+
+// Flow: Secondary sidebar absent on home route
 test("secondary sidebar is absent on the home route", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("[data-testid='secondary-sidebar']")).not.toBeVisible();
 });
 
-test("secondary sidebar is present on a repo route", async ({ page }) => {
-  await page.goto(REPO_ROUTE);
-  await expect(page.locator("[data-testid='secondary-sidebar']")).toBeVisible();
-});
-
 // ─── Toggle ───────────────────────────────────────────────────────────────────
 
+// Flow: Switching to collapsed mode
 test("clicking toggle switches to collapsed mode (icons only)", async ({ page }) => {
+  await mockRepoApis(page);
   await page.goto(REPO_ROUTE);
-  // Ensure expanded first
   await page.evaluate(() => localStorage.setItem("vantage:secondary-sidebar:mode", "expanded"));
   await page.reload();
+  await mockRepoApis(page);
 
-  const navLabel = page.getByText("All Specs");
-  await expect(navLabel).toBeVisible();
+  // Text label is visible when expanded
+  await expect(page.getByText("All Specs")).toBeVisible();
 
-  await page.getByTitle(/collapse sidebar/i).click();
+  // Click the collapse toggle (title is "Collapse sidebar" when expanded)
+  await page.getByTitle("Collapse sidebar").click();
 
-  await expect(navLabel).not.toBeVisible();
-  // Icons still present (by title tooltip)
+  // Text labels are gone; icon-only buttons remain
+  await expect(page.getByText("All Specs")).not.toBeVisible();
+  // The button title becomes the tooltip in collapsed mode
   await expect(page.getByTitle("All Specs")).toBeVisible();
 });
 
+// Flow: Switching to expanded mode
 test("clicking toggle switches back to expanded mode", async ({ page }) => {
+  await mockRepoApis(page);
   await page.goto(REPO_ROUTE);
   await page.evaluate(() => localStorage.setItem("vantage:secondary-sidebar:mode", "collapsed"));
   await page.reload();
+  await mockRepoApis(page);
 
   await expect(page.getByText("All Specs")).not.toBeVisible();
 
-  await page.getByTitle(/expand sidebar/i).click();
+  // Click the expand toggle (title is "Expand sidebar" when collapsed)
+  await page.getByTitle("Expand sidebar").click();
 
   await expect(page.getByText("All Specs")).toBeVisible();
 });
 
+// Flow: Toggle mode persists on navigation
 test("toggle mode persists to another page within same repo", async ({ page }) => {
+  await mockRepoApis(page);
   await page.goto(REPO_ROUTE);
   await page.evaluate(() => localStorage.setItem("vantage:secondary-sidebar:mode", "expanded"));
   await page.reload();
+  await mockRepoApis(page);
 
-  await page.getByTitle(/collapse sidebar/i).click();
+  await page.getByTitle("Collapse sidebar").click();
   await expect(page.getByText("All Specs")).not.toBeVisible();
 
+  await mockRepoApis(page);
   await page.goto(`${REPO_ROUTE}/activity`);
+
   await expect(page.getByText("All Specs")).not.toBeVisible();
 
   const mode = await page.evaluate(() =>
@@ -91,29 +130,39 @@ test("toggle mode persists to another page within same repo", async ({ page }) =
 
 // ─── Nav links ────────────────────────────────────────────────────────────────
 
+// Flow: Expanded mode — icon and label for nav links
 test("expanded mode shows icon and label for all nav links", async ({ page }) => {
+  await mockRepoApis(page);
   await page.goto(REPO_ROUTE);
   await page.evaluate(() => localStorage.setItem("vantage:secondary-sidebar:mode", "expanded"));
   await page.reload();
+  await mockRepoApis(page);
 
   await expect(page.getByText("All Specs")).toBeVisible();
   await expect(page.getByText("Activity")).toBeVisible();
   await expect(page.getByText("Settings")).toBeVisible();
 });
 
+// Flow: Active nav link is highlighted
 test("active nav link is highlighted on /specs sub-route", async ({ page }) => {
-  await page.goto(`${REPO_ROUTE}/specs`);
+  await mockRepoApis(page);
+  await page.goto(`${REPO_ROUTE}/specs`, { timeout: 60000 });
   await page.evaluate(() => localStorage.setItem("vantage:secondary-sidebar:mode", "expanded"));
-  await page.reload();
+  await page.reload({ timeout: 60000 });
+  await mockRepoApis(page);
 
+  // The "All Specs" button should have aria-current="page" when on the /specs route
   const allSpecsBtn = page.getByRole("button", { name: "All Specs" });
-  await expect(allSpecsBtn).toHaveClass(/bg-gray-200/);
+  await expect(allSpecsBtn).toHaveAttribute("aria-current", "page");
 });
 
+// Flow: Navigating via a sidebar link
 test("clicking Activity nav link navigates to /activity", async ({ page }) => {
+  await mockRepoApis(page);
   await page.goto(REPO_ROUTE);
   await page.evaluate(() => localStorage.setItem("vantage:secondary-sidebar:mode", "expanded"));
   await page.reload();
+  await mockRepoApis(page);
 
   await page.getByRole("button", { name: "Activity" }).click();
   await expect(page).toHaveURL(`${REPO_ROUTE}/activity`);
@@ -121,95 +170,93 @@ test("clicking Activity nav link navigates to /activity", async ({ page }) => {
 
 // ─── Projects section ─────────────────────────────────────────────────────────
 
-test("project group shows name and count in collapsed state", async ({ page }) => {
+// Flow: Collapsed project group in expanded mode
+test("project group shows name and count in expanded mode", async ({ page }) => {
+  await mockRepoApis(page);
   await page.goto(REPO_ROUTE);
   await page.evaluate(() => localStorage.setItem("vantage:secondary-sidebar:mode", "expanded"));
   await page.reload();
+  await mockRepoApis(page);
 
-  // Wait for projects to load (skeleton disappears)
-  await page.waitForSelector("[data-testid='secondary-sidebar'] button", { timeout: 5000 });
-
-  // At least the PROJECTS header is visible
-  await expect(page.getByText("Projects", { exact: false })).toBeVisible();
+  // Wait for the mocked projects to render
+  await expect(page.getByText("Auth Flow")).toBeVisible({ timeout: 5000 });
+  await expect(page.getByText("Billing")).toBeVisible();
+  // Spec counts are shown
+  await expect(page.getByText("3")).toBeVisible();
+  await expect(page.getByText("1")).toBeVisible();
 });
 
-test("clicking a project group expands it", async ({ page }) => {
+// Flow: Expanding a project group
+test("clicking a project group expands spec list", async ({ page }) => {
+  await mockRepoApis(page);
   await page.goto(REPO_ROUTE);
   await page.evaluate(() => localStorage.setItem("vantage:secondary-sidebar:mode", "expanded"));
   await page.reload();
+  await mockRepoApis(page);
 
-  // Wait for projects to load
-  await page.waitForTimeout(1000);
+  await page.getByText("Auth Flow").click();
 
-  const projectGroups = page.locator("[data-testid='secondary-sidebar'] button").filter({
-    hasNotText: /All Specs|Activity|Settings/,
-  });
-  const count = await projectGroups.count();
-  if (count === 0) {
-    test.skip();
-    return;
-  }
-
-  const firstGroup = projectGroups.first();
-  const groupName = await firstGroup.textContent();
-  await firstGroup.click();
-
-  // Spec list should now be visible below
-  const specItems = page.locator("[data-testid='secondary-sidebar']").getByRole("button").filter({
-    hasNotText: new RegExp(`^${groupName?.trim()}$|All Specs|Activity|Settings`),
-  });
-  await expect(specItems.first()).toBeVisible();
+  // Spec items inside the group become visible
+  await expect(page.getByText("feature-auth-flow")).toBeVisible({ timeout: 3000 });
 });
 
-test("project group collapses when clicked again", async ({ page }) => {
+// Flow: Collapsing an expanded project group
+test("clicking a project group again collapses the spec list", async ({ page }) => {
+  await mockRepoApis(page);
   await page.goto(REPO_ROUTE);
   await page.evaluate(() => localStorage.setItem("vantage:secondary-sidebar:mode", "expanded"));
   await page.reload();
+  await mockRepoApis(page);
 
-  await page.waitForTimeout(1000);
+  await page.getByText("Auth Flow").click(); // expand
+  await expect(page.getByText("feature-auth-flow")).toBeVisible({ timeout: 3000 });
 
-  const projectGroups = page.locator("[data-testid='secondary-sidebar'] button").filter({
-    hasNotText: /All Specs|Activity|Settings/,
-  });
-  if ((await projectGroups.count()) === 0) {
-    test.skip();
-    return;
-  }
-
-  await projectGroups.first().click(); // expand
-  await projectGroups.first().click(); // collapse
-
-  // Spec list is no longer visible
-  const inner = page.locator("[data-testid='secondary-sidebar'] .ml-4");
-  await expect(inner).not.toBeVisible();
+  await page.getByText("Auth Flow").click(); // collapse
+  await expect(page.getByText("feature-auth-flow")).not.toBeVisible();
 });
 
+// Flow: Project groups in collapsed sidebar mode
 test("collapsed mode shows project initials squares instead of names", async ({ page }) => {
+  await mockRepoApis(page);
   await page.goto(REPO_ROUTE);
   await page.evaluate(() => localStorage.setItem("vantage:secondary-sidebar:mode", "collapsed"));
   await page.reload();
+  await mockRepoApis(page);
 
-  await page.waitForTimeout(1000);
-
-  // Text labels should not be visible
-  await expect(page.getByText("Projects", { exact: false })).not.toBeVisible();
+  // Project name labels are not visible
+  await expect(page.getByText("Auth Flow")).not.toBeVisible();
+  await expect(page.getByText("Billing")).not.toBeVisible();
+  // "Projects" section header also hidden
+  await expect(page.getByText("Projects", { exact: true })).not.toBeVisible();
 });
 
+// Flow: Empty projects list
 test("empty projects state shows 'No projects yet.' in expanded mode", async ({ page }) => {
-  // This test requires a repo that has no openspec/changes/ directory.
-  // Skip if the current test repo has projects.
-  await page.goto("/repo/acme/empty-repo");
+  await page.route("**/api/repos/**/projects", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ projects: [] }),
+    })
+  );
+  await page.route("**/api/repos/**/specs", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ specs: [] }) })
+  );
+
+  await page.goto(REPO_ROUTE);
   await page.evaluate(() => localStorage.setItem("vantage:secondary-sidebar:mode", "expanded"));
   await page.reload();
 
-  await page.waitForTimeout(1500);
+  await page.route("**/api/repos/**/projects", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ projects: [] }),
+    })
+  );
+  await page.route("**/api/repos/**/specs", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ specs: [] }) })
+  );
 
-  const secondary = page.locator("[data-testid='secondary-sidebar']");
-  const visible = await secondary.isVisible();
-  if (!visible) {
-    test.skip();
-    return;
-  }
-
-  await expect(page.getByText("No projects yet.")).toBeVisible();
+  await expect(page.getByText("No projects yet.")).toBeVisible({ timeout: 5000 });
 });

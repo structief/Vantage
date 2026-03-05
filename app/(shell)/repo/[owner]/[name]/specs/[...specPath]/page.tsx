@@ -1,0 +1,60 @@
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { fetchSpecFileContent, fetchLastCommit, fetchDirectoryListing } from "@/lib/github-spec";
+import SpecDetailView from "@/components/SpecDetailView";
+
+interface Props {
+  params: Promise<{ owner: string; name: string; specPath: string[] }>;
+}
+
+export default async function SpecDetailPage({ params }: Props) {
+  const session = await auth();
+  if (!session) redirect("/login");
+
+  const { owner, name, specPath } = await params;
+  const token = (session as { accessToken?: string }).accessToken ?? "";
+
+  // specPath = [...changePath, specFilename]
+  // e.g. ["spec-detail-view", "feature-spec-detail-view"]
+  // e.g. ["archive", "2026-03-04-xxx", "feature"]
+  const specFilename = specPath[specPath.length - 1];
+  const changePath = specPath.slice(0, -1).join("/");
+  const filePath = `openspec/changes/${changePath}/specs/${specFilename}.md`;
+
+  const [specResult, commitInfo, contractFiles, testFiles] = await Promise.all([
+    fetchSpecFileContent(token, owner, name, filePath),
+    fetchLastCommit(token, owner, name, filePath),
+    fetchDirectoryListing(token, owner, name, `openspec/changes/${changePath}/contracts`),
+    fetchDirectoryListing(token, owner, name, `openspec/changes/${changePath}/tests`),
+  ]);
+
+  if (!specResult) {
+    return (
+      <div className="flex flex-col items-center justify-center flex-1 min-h-[60vh] text-center px-4">
+        <p className="text-[15px] font-medium text-gray-800 mb-1">Spec not found</p>
+        <p className="text-[13px] text-gray-500 mb-6">
+          No spec file found at <code className="text-gray-700">{filePath}</code>
+        </p>
+        <Link
+          href={`/repo/${owner}/${name}/specs`}
+          className="text-[13px] text-brand-600 hover:text-brand-700 font-medium"
+        >
+          ← Back to All Specs
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <SpecDetailView
+      markdown={specResult.markdown}
+      filename={specFilename}
+      login={commitInfo?.login ?? null}
+      avatarUrl={commitInfo?.avatarUrl ?? null}
+      date={commitInfo?.date ?? null}
+      contractFiles={contractFiles}
+      testFiles={testFiles}
+    />
+  );
+}

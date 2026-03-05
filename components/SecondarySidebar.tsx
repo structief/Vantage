@@ -5,11 +5,20 @@ import { usePathname, useRouter } from "next/navigation";
 import { getRepoGradient, getRepoInitials } from "@/lib/gradients";
 import { getProjectInitials } from "@/lib/utils";
 import { useSidebarMode } from "@/components/SidebarModeProvider";
+import { DocIcon } from "@/components/icons/DocIcon";
+import { specPathToUrl } from "@/lib/spec-utils";
 
 interface Project {
   slug: string;
   name: string;
   specCount: number;
+}
+
+interface SpecEntry {
+  slug: string;
+  group: string | null;
+  path: string;
+  status: "active" | "archived";
 }
 
 const NAV_LINKS = [
@@ -29,15 +38,26 @@ export default function SecondarySidebar() {
   })();
 
   const [projects, setProjects] = useState<Project[] | null>(null);
+  const [specs, setSpecs] = useState<SpecEntry[] | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!activeFullName) return;
     setProjects(null);
-    fetch(`/api/repos/${encodeURIComponent(activeFullName)}/projects`)
-      .then((r) => r.json())
-      .then((d) => setProjects(d.projects ?? []))
-      .catch(() => setProjects([]));
+    setSpecs(null);
+    const encoded = encodeURIComponent(activeFullName);
+    Promise.all([
+      fetch(`/api/repos/${encoded}/projects`).then((r) => r.json()),
+      fetch(`/api/repos/${encoded}/specs`).then((r) => r.json()),
+    ])
+      .then(([projectsData, specsData]) => {
+        setProjects(projectsData.projects ?? []);
+        setSpecs(specsData.specs ?? []);
+      })
+      .catch(() => {
+        setProjects([]);
+        setSpecs([]);
+      });
   }, [activeFullName]);
 
   if (!activeFullName) return null;
@@ -78,7 +98,7 @@ export default function SecondarySidebar() {
       </div>
 
       {/* Nav links */}
-      <nav className="flex flex-col px-2 gap-1.5 mt-3 mb-5">
+      <nav className={`flex flex-col px-2 gap-1.5 mt-3 mb-5 ${isExpanded ? "px-2" : "px-0.5"}`}>
         {NAV_LINKS.map(({ key, label, icon, suffix }) => {
           const href = `${repoBase}${suffix}`;
           const isActive = pathname.startsWith(href);
@@ -87,6 +107,7 @@ export default function SecondarySidebar() {
               key={key}
               onClick={() => router.push(href)}
               title={!isExpanded ? label : undefined}
+              aria-current={isActive ? "page" : undefined}
               className={`flex items-center gap-2.5 rounded-md px-3 py-2.5 text-[13px] transition-colors w-full text-left ${
                 isExpanded ? "px-3" : "px-1 justify-center"
               } ${
@@ -148,8 +169,13 @@ export default function SecondarySidebar() {
                       <span className="text-[11px] text-gray-400 font-normal">{project.specCount}</span>
                     )}
                   </button>
-                  {isOpen && project.specCount > 0 && (
-                    <SpecPlaceholderList repoBase={repoBase} slug={project.slug} />
+                  {isOpen && (
+                    <SpecFileList
+                      repoBase={repoBase}
+                      projectSlug={project.slug}
+                      specs={specs}
+                      pathname={pathname}
+                    />
                   )}
                 </div>
               );
@@ -174,17 +200,62 @@ export default function SecondarySidebar() {
   );
 }
 
-function SpecPlaceholderList({ repoBase, slug }: { repoBase: string; slug: string }) {
+function SpecFileList({
+  repoBase,
+  projectSlug,
+  specs,
+  pathname,
+}: {
+  repoBase: string;
+  projectSlug: string;
+  specs: SpecEntry[] | null;
+  pathname: string;
+}) {
   const router = useRouter();
+
+  if (specs === null) {
+    return (
+      <div className="flex flex-col gap-1.5 ml-4 mb-1 px-2">
+        {[60, 75, 50].map((w, i) => (
+          <div key={i} className="flex items-center gap-1.5 py-1">
+            <div className="w-3 h-3 rounded bg-gray-200 animate-pulse shrink-0" />
+            <div className="h-2.5 rounded bg-gray-200 animate-pulse" style={{ width: `${w}%` }} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const projectSpecs = specs.filter((s) =>
+    s.path.startsWith(`openspec/changes/${projectSlug}/`)
+  );
+
+  if (projectSpecs.length === 0) {
+    return (
+      <p className="ml-4 mb-1 px-2 text-[11px] text-gray-400">No specs yet.</p>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-0.5 ml-4 mb-1">
-      <button
-        onClick={() => router.push(`${repoBase}/specs/${slug}`)}
-        className="flex items-center gap-1.5 px-2 py-1 rounded text-[12px] text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors text-left"
-      >
-        <DocIcon className="w-3 h-3 shrink-0 text-gray-400" />
-        <span className="truncate">{slug}</span>
-      </button>
+    <div className="flex flex-col gap-1.5 ml-4 mb-1">
+      {projectSpecs.map((spec) => {
+        const href = specPathToUrl(repoBase, spec.path);
+        const isActive = pathname === href || pathname.startsWith(`${href}/`);
+        return (
+          <button
+            key={spec.path}
+            onClick={() => router.push(href)}
+            className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-[12px] transition-colors text-left w-full ${
+              isActive
+                ? "bg-gray-100 text-gray-900 font-medium"
+                : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+            }`}
+          >
+            <DocIcon className="w-3 h-3 shrink-0 text-gray-400" />
+            <span className="truncate">{spec.slug}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -231,11 +302,3 @@ function ChevronIcon({ className }: { className?: string }) {
   );
 }
 
-function DocIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 12 12" fill="none" aria-hidden>
-      <rect x="2" y="1" width="8" height="10" rx="1" stroke="currentColor" strokeWidth="1.1" />
-      <path d="M4 4h4M4 6.5h4M4 9h2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-    </svg>
-  );
-}
