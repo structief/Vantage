@@ -30,7 +30,7 @@ When the user toggles a criterion's validation state in the Criteria tab, the ap
 - **WHEN** the commit fails (e.g., network error, insufficient permissions, or conflict)
 - **THEN** the application SHALL display an error to the user and SHALL NOT update the local UI state; the criterion SHALL revert to its previous validation state
 
-### Requirement: Server-Side Parsing of Validation State
+### [x] Requirement: Server-Side Parsing of Validation State
 When loading a spec for the spec detail view, the server SHALL parse the spec markdown to extract the validation state of each requirement from the inline `[ ]` / `[x]` checkbox. The server SHALL pass the parsed `validatedIndices` (or equivalent) to the client so that the Criteria tab, progress bar, spec status badge, and secondary sidebar dot all reflect the persisted state from the spec file.
 
 #### Scenario: Initial state from parsed spec
