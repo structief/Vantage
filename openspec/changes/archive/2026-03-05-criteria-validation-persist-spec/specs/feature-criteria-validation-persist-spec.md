@@ -60,7 +60,7 @@ The secondary sidebar SHALL display the correct status dot (Draft / In review / 
 - **WHEN** the user loads an archived spec
 - **THEN** the application SHALL parse that spec and update the sidebar dot for it; the updated status SHALL persist for the session or until invalidated
 
-### Requirement: Spec Status Cache in Database
+### [x] Requirement: Spec Status Cache in Database
 The application SHALL cache parsed spec status (Draft / In review / Reviewed) in the local SQLite database to avoid repeated GitHub fetches and parsing. The cache SHALL be keyed by repository and spec file path. The cache SHALL be invalidated or updated when: (a) the user toggles a criterion (upsert with new status), (b) the user loads a spec (re-parse and upsert), or (c) the cached entry is older than a configured TTL (e.g. 15 minutes). When serving the sidebar, the application SHALL prefer cached status when fresh; when stale or missing, it SHALL fetch and parse the spec, upsert the cache, and return the status.
 
 #### Scenario: Sidebar uses cached status when fresh
