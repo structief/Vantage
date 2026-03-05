@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Contracts Tab
+### [x] Requirement: Contracts Tab
 
 The spec detail view SHALL provide a "Contracts" tab that visualises API contracts (OpenAPI from `contracts/api/` and JSON Schema from `contracts/data/`) and data models (Prisma schema) in a structured, readable format aligned with Vantage's design system.
 
