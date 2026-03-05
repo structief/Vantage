@@ -38,7 +38,7 @@ A `GET /api/repos/[encodedFullName]/spec-content?path=<encoded-path>` endpoint S
 - **WHEN** the request has no valid session
 - **THEN** the response SHALL be `401` with `{ "error": "Not authenticated" }`
 
-### Requirement: Spec Detail Page — Slug and Title
+### [x] Requirement: Spec Detail Page — Slug and Title
 When the user navigates to `/repo/[owner]/[name]/specs/[slug]`, the page SHALL display the spec's slug and its title. The title SHALL be extracted from the first `# Heading` line of the spec file content; if no such line exists the slug SHALL be used as the title.
 
 #### Scenario: Selecting a spec from the sidebar
