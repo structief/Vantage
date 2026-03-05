@@ -5,8 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { getRepoGradient, getRepoInitials } from "@/lib/gradients";
 import { getProjectInitials } from "@/lib/utils";
 import { useSidebarMode } from "@/components/SidebarModeProvider";
-import { DocIcon } from "@/components/icons/DocIcon";
 import { specPathToUrl } from "@/lib/spec-utils";
+import { useSpecStatus, STATUS_DOT } from "@/components/SpecStatusContext";
 
 interface Project {
   slug: string;
@@ -212,6 +212,7 @@ function SpecFileList({
   pathname: string;
 }) {
   const router = useRouter();
+  const { getStatus } = useSpecStatus();
 
   if (specs === null) {
     return (
@@ -251,8 +252,8 @@ function SpecFileList({
                 : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
             }`}
           >
-            <DocIcon className="w-3 h-3 shrink-0 text-gray-400" />
-            <span className="truncate">{spec.slug}</span>
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 mr-1 ${STATUS_DOT[getStatus(spec.slug)]}`} />
+            <span className="truncate">{spec.slug.replace(/^feature-/, "")}</span>
           </button>
         );
       })}

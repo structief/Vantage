@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { extractCriteriaCount, deriveStatus } from "@/lib/spec-utils";
+import { useSpecStatus } from "@/components/SpecStatusContext";
 import SpecTitleSection from "@/components/SpecTitleSection";
 import CriteriaProgressBar from "@/components/CriteriaProgressBar";
 import SpecTabBar, { type SpecTab } from "@/components/SpecTabBar";
@@ -33,6 +34,13 @@ export default function SpecDetailView({
 
   const criteriaCount = extractCriteriaCount(markdown);
   const status = deriveStatus(validatedIndices.size, criteriaCount);
+
+  const { updateSpecStatus } = useSpecStatus();
+  const slug = filename.replace(/^.*\//, "").replace(/\.md$/, "");
+
+  useEffect(() => {
+    updateSpecStatus(slug, status);
+  }, [slug, status, updateSpecStatus]);
 
   const handleToggle = useCallback((index: number) => {
     setValidatedIndices((prev) => {

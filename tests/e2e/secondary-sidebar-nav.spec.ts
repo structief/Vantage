@@ -196,8 +196,8 @@ test("clicking a project group expands spec list", async ({ page }) => {
 
   await page.getByText("Auth Flow").click();
 
-  // Spec items inside the group become visible
-  await expect(page.getByText("feature-auth-flow")).toBeVisible({ timeout: 3000 });
+  // Spec items inside the group become visible (feature- prefix is stripped from display label)
+  await expect(page.getByText("auth-flow")).toBeVisible({ timeout: 3000 });
 });
 
 // Flow: Collapsing an expanded project group
@@ -209,10 +209,10 @@ test("clicking a project group again collapses the spec list", async ({ page }) 
   await mockRepoApis(page);
 
   await page.getByText("Auth Flow").click(); // expand
-  await expect(page.getByText("feature-auth-flow")).toBeVisible({ timeout: 3000 });
+  await expect(page.getByText("auth-flow")).toBeVisible({ timeout: 3000 });
 
   await page.getByText("Auth Flow").click(); // collapse
-  await expect(page.getByText("feature-auth-flow")).not.toBeVisible();
+  await expect(page.getByText("auth-flow")).not.toBeVisible();
 });
 
 // Flow: Project groups in collapsed sidebar mode
