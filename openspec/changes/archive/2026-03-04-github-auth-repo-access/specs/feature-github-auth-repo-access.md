@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: GitHub OAuth Login
+### [x] Requirement: GitHub OAuth Login
 A user SHALL be able to initiate a login flow from the Vantage UI using their GitHub account. Vantage SHALL use GitHub OAuth (OAuth 2.0 Authorization Code flow) as the sole identity mechanism. No username/password or separate registration is required. After successful authentication, the user's GitHub identity (login, name, avatar URL) SHALL be stored in the session.
 
 #### Scenario: Successful login
