@@ -21,7 +21,7 @@ A user SHALL be able to initiate a login flow from the Vantage UI using their Gi
 
 ---
 
-### Requirement: GitHub OAuth Logout
+### [x] Requirement: GitHub OAuth Logout
 A user SHALL be able to sign out of Vantage at any time. On logout, the server-side session MUST be invalidated and all locally cached GitHub tokens MUST be cleared.
 
 #### Scenario: Successful logout
