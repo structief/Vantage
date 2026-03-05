@@ -83,7 +83,7 @@ The Overview tab SHALL render the full body of the spec markdown file as formatt
 - **WHEN** the spec file contains YAML frontmatter (delimited by `---`)
 - **THEN** the frontmatter block SHALL NOT appear in the rendered output
 
-### Requirement: Criteria Tab Content
+### [x] Requirement: Criteria Tab Content
 The Criteria tab SHALL list all criteria items extracted from the spec's criteria section (if present). Each criterion SHALL be shown as a checklist row with a checkbox (read-only in this change), the criterion text, and a "validated" or "pending" indicator.
 
 #### Scenario: Criteria list rendered
