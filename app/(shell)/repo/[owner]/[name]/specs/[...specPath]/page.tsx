@@ -8,6 +8,10 @@ import {
   fetchDirectoryListing,
 } from "@/lib/github-spec";
 import {
+  extractRequirementState,
+  deriveStatus,
+} from "@/lib/spec-utils";
+import {
   parseOpenApi,
   parseJsonSchema,
   parsePrismaSchema,
@@ -122,6 +126,29 @@ export default async function SpecDetailPage({ params }: Props) {
     );
   }
 
+  const { names, validatedIndices: initialValidatedIndices } =
+    extractRequirementState(specResult.markdown);
+  const status = deriveStatus(initialValidatedIndices.size, names.length);
+
+  await prisma.specStatusCache.upsert({
+    where: {
+      repoFullName_specPath: {
+        repoFullName,
+        specPath: filePath,
+      },
+    },
+    create: {
+      repoFullName,
+      specPath: filePath,
+      status,
+      fetchedAt: new Date(),
+    },
+    update: {
+      status,
+      fetchedAt: new Date(),
+    },
+  });
+
   return (
     <SpecDetailView
       markdown={specResult.markdown}
@@ -136,6 +163,9 @@ export default async function SpecDetailPage({ params }: Props) {
       testSections={testSections}
       deploymentRuns={deploymentRuns}
       testsCount={testGroupCount}
+      initialValidatedIndices={initialValidatedIndices}
+      repoFullName={repoFullName}
+      specPath={filePath}
     />
   );
 }

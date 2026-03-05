@@ -1,0 +1,164 @@
+openapi: "3.0.3"
+info:
+  title: "Spec Validation API"
+  version: "1.0.0"
+  description: >
+    API for fetching spec validation status (for sidebar dots) and toggling
+    criterion validation state (persists to spec .md file via git commit).
+
+paths:
+  /api/repos/{encodedFullName}/specs/statuses:
+    get:
+      summary: "Get validation status for all non-archived specs"
+      operationId: "getSpecStatuses"
+      description: >
+        Returns status (Draft | In review | Reviewed) for each non-archived spec
+        in the repo. Uses SpecStatusCache when fresh (within TTL); otherwise
+        fetches from GitHub, parses checkbox state, upserts cache, returns.
+        Archived specs are excluded from this response (show Draft until loaded).
+        Requires an authenticated session.
+      parameters:
+        - name: encodedFullName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: >
+            URL-encoded full repo name, e.g. encodeURIComponent("owner/name")
+      responses:
+        "200":
+          description: "Statuses retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpecStatusesResponse"
+        "401":
+          description: "Not authenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: "Invalid encodedFullName"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/repos/{encodedFullName}/specs/validate:
+    post:
+      summary: "Toggle criterion validation and commit to spec file"
+      operationId: "toggleCriterionValidation"
+      description: >
+        Fetches the spec file, finds the Nth requirement heading,
+        toggles [ ] ↔ [x], commits via GitHub API with message
+        "Validate: <name>" or "Unvalidate: <name>".
+        On success, upserts SpecStatusCache.
+        Requires an authenticated session.
+      parameters:
+        - name: encodedFullName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "URL-encoded full repo name"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateRequest"
+      responses:
+        "200":
+          description: "Criterion toggled and committed successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateResponse"
+        "400":
+          description: "Missing path, invalid requirementIndex, or validation error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Not authenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Spec file not found at the given path"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: "GitHub API conflict (e.g. stale sha, merge conflict)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    SpecStatusesResponse:
+      type: object
+      required:
+        - statuses
+      properties:
+        statuses:
+          type: object
+          additionalProperties:
+            type: string
+            enum:
+              - Draft
+              - "In review"
+              - Reviewed
+          description: >
+            Map of spec path (or slug) to status. Key format TBD:
+            specPath (e.g. "openspec/changes/foo/specs/feature-bar.md") or
+            a composite the client can use for lookup.
+
+    ValidateRequest:
+      type: object
+      required:
+        - path
+        - requirementIndex
+        - validated
+      properties:
+        path:
+          type: string
+          description: >
+            Full path to the spec file within the repo,
+            e.g. "openspec/changes/my-change/specs/feature-foo.md"
+        requirementIndex:
+          type: integer
+          minimum: 0
+          description: >
+            Zero-based index of the requirement heading to toggle.
+            Must match a line with ### [ ] Requirement: or ### [x] Requirement:
+        validated:
+          type: boolean
+          description: >
+            true = mark as validated ([x]), false = mark as unvalidated ([ ])
+
+    ValidateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - Draft
+            - "In review"
+            - Reviewed
+          description: "Derived spec status after the toggle"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: "Human-readable error message"

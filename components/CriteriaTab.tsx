@@ -4,9 +4,10 @@ interface Props {
   markdown: string;
   validatedIndices: Set<number>;
   onToggle: (index: number) => void;
+  disabled?: boolean;
 }
 
-export default function CriteriaTab({ markdown, validatedIndices, onToggle }: Props) {
+export default function CriteriaTab({ markdown, validatedIndices, onToggle, disabled }: Props) {
   const requirements = extractRequirementNames(markdown);
 
   if (requirements.length === 0) {
@@ -16,7 +17,21 @@ export default function CriteriaTab({ markdown, validatedIndices, onToggle }: Pr
   }
 
   return (
-    <ul className="flex flex-col divide-y divide-gray-50/80">
+    <div className="relative">
+      {disabled && (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-lg"
+          aria-live="polite"
+        >
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+            <span className="text-[13px] text-gray-600">Saving…</span>
+          </div>
+        </div>
+      )}
+      <ul
+        className={`flex flex-col divide-y divide-gray-50/80 transition-opacity ${disabled ? "pointer-events-none opacity-60" : ""}`}
+      >
       {requirements.map((name, i) => {
         const validated = validatedIndices.has(i);
         return (
@@ -65,6 +80,7 @@ export default function CriteriaTab({ markdown, validatedIndices, onToggle }: Pr
           </li>
         );
       })}
-    </ul>
+      </ul>
+    </div>
   );
 }

@@ -1,0 +1,14 @@
+// Migration note: Add SpecStatusCache for persisting parsed spec validation status.
+// Cached per (repoFullName, specPath) with TTL; invalidated on toggle or spec load.
+// Spec reference: specs/feature-criteria-validation-persist-spec.md
+
+// Requirement: Spec Status Cache in Database
+model SpecStatusCache {
+  repoFullName String
+  specPath     String
+  status       String   // "Draft" | "In review" | "Reviewed"
+  fetchedAt    DateTime
+
+  @@id([repoFullName, specPath])
+  @@map("spec_status_cache")
+}

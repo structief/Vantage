@@ -44,6 +44,18 @@ model PinnedRepo {
   @@map("pinned_repos")
 }
 
+// Spec reference: openspec/changes/criteria-validation-persist-spec/specs/feature-criteria-validation-persist-spec.md
+// Requirement: Spec Status Cache in Database
+model SpecStatusCache {
+  repoFullName String
+  specPath     String
+  status       String
+  fetchedAt    DateTime
+
+  @@id([repoFullName, specPath])
+  @@map("spec_status_cache")
+}
+
 // Spec reference: openspec/changes/spec-tests-visualisation/specs/feature-tests-visualisation.md
 // Requirement: Deployment runs section with last results
 model TestRun {

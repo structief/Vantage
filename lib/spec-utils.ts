@@ -21,21 +21,76 @@ export function stripFrontmatter(markdown: string): string {
   return matter(markdown).content;
 }
 
+/**
+ * Removes [ ] and [x] checkbox markers from requirement headings for display.
+ * Converts `### [ ] Requirement: X` and `### [x] Requirement: X` to `### Requirement: X`.
+ */
+export function stripRequirementCheckboxesForDisplay(markdown: string): string {
+  return markdown.replace(
+    /^(###\s+)\[[ x]\]\s+(Requirement:)/gm,
+    "$1$2"
+  );
+}
+
 export function extractCriteriaCount(markdown: string): number {
   const body = stripFrontmatter(markdown);
-  const matches = body.match(/^###\s+Requirement:/gm);
+  const matches = body.match(/^###\s+(?:\[[ x]\]\s+)?Requirement:/gm);
   return matches ? matches.length : 0;
 }
 
 export function extractRequirementNames(markdown: string): string[] {
+  return extractRequirementState(markdown).names;
+}
+
+export function extractRequirementState(
+  markdown: string
+): { names: string[]; validatedIndices: Set<number> } {
   const body = stripFrontmatter(markdown);
   const lines = body.split("\n");
   const names: string[] = [];
+  const validatedIndices = new Set<number>();
   for (const line of lines) {
-    const m = line.match(/^###\s+Requirement:\s+(.+)/);
-    if (m) names.push(m[1].trim());
+    // Match ### [x] Requirement: X, ### [ ] Requirement: X, ### Requirement: X (legacy)
+    const m = line.match(/^###\s+(\[[ x]\]\s+)?Requirement:\s+(.+)$/);
+    if (m) {
+      const checkbox = m[1]; // "[x] ", "[ ] ", or undefined (legacy)
+      const name = m[2].trim();
+      names.push(name);
+      const idx = names.length - 1;
+      if (checkbox?.trim() === "[x]") {
+        validatedIndices.add(idx);
+      }
+      // "[ ]" or legacy (no checkbox) → unvalidated
+    }
   }
-  return names;
+  return { names, validatedIndices };
+}
+
+export function toggleRequirementCheckbox(
+  markdown: string,
+  requirementIndex: number,
+  validated: boolean
+): string {
+  const body = stripFrontmatter(markdown);
+  const { data: frontmatter } = matter(markdown);
+  const lines = body.split("\n");
+  let idx = -1;
+  const newLines = lines.map((line) => {
+    const m = line.match(/^###\s+(\[[ x]\]\s+)?Requirement:\s+(.+)$/);
+    if (m) {
+      idx++;
+      if (idx === requirementIndex) {
+        const name = m[2].trim();
+        const newCheckbox = validated ? "[x]" : "[ ]";
+        return `### ${newCheckbox} Requirement: ${name}`;
+      }
+    }
+    return line;
+  });
+  const newBody = newLines.join("\n");
+  return frontmatter && Object.keys(frontmatter).length > 0
+    ? matter.stringify(newBody, frontmatter)
+    : newBody;
 }
 
 export function deriveStatus(

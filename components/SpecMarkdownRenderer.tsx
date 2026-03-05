@@ -1,14 +1,17 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
-import { stripFrontmatter } from "@/lib/spec-utils";
+import {
+  stripFrontmatter,
+  stripRequirementCheckboxesForDisplay,
+} from "@/lib/spec-utils";
 
 interface Props {
   markdown: string;
 }
 
 export default function SpecMarkdownRenderer({ markdown }: Props) {
-  const body = stripFrontmatter(markdown);
+  const body = stripRequirementCheckboxesForDisplay(stripFrontmatter(markdown));
   return (
     <div className="prose prose-sm max-w-none
       prose-headings:font-semibold prose-headings:text-gray-900 prose-headings:tracking-tight

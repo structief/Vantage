@@ -79,3 +79,30 @@ export async function fetchDirectoryListing(
     throw err;
   }
 }
+
+export async function updateSpecFile(
+  token: string,
+  owner: string,
+  repo: string,
+  path: string,
+  content: string,
+  message: string
+): Promise<{ sha: string } | null> {
+  const octokit = new Octokit({ auth: token });
+  try {
+    const { data: existing } = await octokit.rest.repos.getContent({ owner, repo, path });
+    const sha = Array.isArray(existing) ? undefined : existing.sha;
+    const { data } = await octokit.rest.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path,
+      message,
+      content: Buffer.from(content).toString("base64"),
+      ...(sha ? { sha } : {}),
+    });
+    return data.commit ? { sha: data.commit.sha } : null;
+  } catch (err: unknown) {
+    if ((err as { status?: number }).status === 404) return null;
+    throw err;
+  }
+}

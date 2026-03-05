@@ -79,8 +79,8 @@ describe("Default dot state for unvisited spec", () => {
     expect(getStatus(map, "add-auth")).toBe("Draft");
   });
 
-  it("Draft maps to bg-gray-400 in STATUS_DOT", () => {
-    expect(STATUS_DOT["Draft"]).toBe("bg-gray-400");
+  it("Draft maps to bg-gray-300 in STATUS_DOT", () => {
+    expect(STATUS_DOT["Draft"]).toBe("bg-gray-300");
   });
 });
 

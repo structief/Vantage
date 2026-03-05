@@ -41,6 +41,8 @@ export default function SecondarySidebar() {
   const [specs, setSpecs] = useState<SpecEntry[] | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
+  const { preloadStatuses } = useSpecStatus();
+
   useEffect(() => {
     if (!activeFullName) return;
     setProjects(null);
@@ -49,16 +51,20 @@ export default function SecondarySidebar() {
     Promise.all([
       fetch(`/api/repos/${encoded}/projects`).then((r) => r.json()),
       fetch(`/api/repos/${encoded}/specs`).then((r) => r.json()),
+      fetch(`/api/repos/${encoded}/specs/statuses`).then((r) => r.json()),
     ])
-      .then(([projectsData, specsData]) => {
+      .then(([projectsData, specsData, statusesData]) => {
         setProjects(projectsData.projects ?? []);
         setSpecs(specsData.specs ?? []);
+        if (statusesData.statuses) {
+          preloadStatuses(statusesData.statuses);
+        }
       })
       .catch(() => {
         setProjects([]);
         setSpecs([]);
       });
-  }, [activeFullName]);
+  }, [activeFullName, preloadStatuses]);
 
   if (!activeFullName) return null;
 
@@ -252,7 +258,7 @@ function SpecFileList({
                 : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
             }`}
           >
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 mr-1 ${STATUS_DOT[getStatus(spec.slug)]}`} />
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 mr-1 ${STATUS_DOT[getStatus(spec.path)]}`} />
             <span className="truncate">{spec.slug.replace(/^feature-/, "")}</span>
           </button>
         );

@@ -2,8 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   extractSpecMeta,
   stripFrontmatter,
+  stripRequirementCheckboxesForDisplay,
   extractCriteriaCount,
   extractRequirementNames,
+  extractRequirementState,
+  toggleRequirementCheckbox,
   specPathToUrl,
 } from "@/lib/spec-utils";
 
@@ -31,6 +34,25 @@ describe("extractSpecMeta", () => {
     const md = `---\ntitle: "  Trimmed Title  "\n---`;
     const { title } = extractSpecMeta(md);
     expect(title).toBe("Trimmed Title");
+  });
+});
+
+// ── stripRequirementCheckboxesForDisplay ────────────────────────────────────
+
+describe("stripRequirementCheckboxesForDisplay", () => {
+  it("removes [ ] from requirement headings", () => {
+    const md = `### [ ] Requirement: Foo`;
+    expect(stripRequirementCheckboxesForDisplay(md)).toBe(`### Requirement: Foo`);
+  });
+
+  it("removes [x] from requirement headings", () => {
+    const md = `### [x] Requirement: Bar`;
+    expect(stripRequirementCheckboxesForDisplay(md)).toBe(`### Requirement: Bar`);
+  });
+
+  it("leaves legacy headings unchanged", () => {
+    const md = `### Requirement: Baz`;
+    expect(stripRequirementCheckboxesForDisplay(md)).toBe(`### Requirement: Baz`);
   });
 });
 
@@ -87,6 +109,53 @@ describe("extractRequirementNames", () => {
 
   it("returns empty array when no requirements", () => {
     expect(extractRequirementNames("## Just text")).toEqual([]);
+  });
+
+  it("extracts names from ### [ ] Requirement: and ### [x] Requirement: lines", () => {
+    const md = `### [ ] Requirement: Foo\n### [x] Requirement: Bar`;
+    const names = extractRequirementNames(md);
+    expect(names).toEqual(["Foo", "Bar"]);
+  });
+});
+
+// ── extractRequirementState ─────────────────────────────────────────────────
+
+describe("extractRequirementState", () => {
+  it("Parsing validated state from checkbox — [x] yields validated", () => {
+    const md = `### [x] Requirement: Foo`;
+    const { names, validatedIndices } = extractRequirementState(md);
+    expect(names).toEqual(["Foo"]);
+    expect(validatedIndices.has(0)).toBe(true);
+  });
+
+  it("Parsing unvalidated state from checkbox — [ ] yields unvalidated", () => {
+    const md = `### [ ] Requirement: Foo`;
+    const { names, validatedIndices } = extractRequirementState(md);
+    expect(names).toEqual(["Foo"]);
+    expect(validatedIndices.has(0)).toBe(false);
+  });
+
+  it("Legacy heading without checkbox — treated as unvalidated", () => {
+    const md = `### Requirement: Foo`;
+    const { names, validatedIndices } = extractRequirementState(md);
+    expect(names).toEqual(["Foo"]);
+    expect(validatedIndices.has(0)).toBe(false);
+  });
+});
+
+// ── toggleRequirementCheckbox ────────────────────────────────────────────────
+
+describe("toggleRequirementCheckbox", () => {
+  it("toggles [ ] to [x] when validating", () => {
+    const md = `### [ ] Requirement: Foo`;
+    const result = toggleRequirementCheckbox(md, 0, true);
+    expect(result).toContain("### [x] Requirement: Foo");
+  });
+
+  it("toggles [x] to [ ] when unvalidating", () => {
+    const md = `### [x] Requirement: Foo`;
+    const result = toggleRequirementCheckbox(md, 0, false);
+    expect(result).toContain("### [ ] Requirement: Foo");
   });
 });
 

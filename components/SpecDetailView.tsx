@@ -37,6 +37,9 @@ interface Props {
   testSections: TestSection[];
   deploymentRuns: DeploymentRun[];
   testsCount: number;
+  initialValidatedIndices?: Set<number>;
+  repoFullName?: string;
+  specPath?: string;
 }
 
 export default function SpecDetailView({
@@ -52,31 +55,71 @@ export default function SpecDetailView({
   testSections,
   deploymentRuns,
   testsCount,
+  initialValidatedIndices,
+  repoFullName,
+  specPath,
 }: Props) {
   const [activeTab, setActiveTab] = useState<SpecTab>("overview");
-  const [validatedIndices, setValidatedIndices] = useState<Set<number>>(new Set());
+  const [validatedIndices, setValidatedIndices] = useState<Set<number>>(
+    () => initialValidatedIndices ?? new Set()
+  );
+  const [criteriaLoading, setCriteriaLoading] = useState(false);
 
   const criteriaCount = extractCriteriaCount(markdown);
   const status = deriveStatus(validatedIndices.size, criteriaCount);
 
   const { updateSpecStatus } = useSpecStatus();
-  const slug = filename.replace(/^.*\//, "").replace(/\.md$/, "");
 
   useEffect(() => {
-    updateSpecStatus(slug, status);
-  }, [slug, status, updateSpecStatus]);
+    if (specPath) updateSpecStatus(specPath, status);
+  }, [specPath, status, updateSpecStatus]);
 
-  const handleToggle = useCallback((index: number) => {
-    setValidatedIndices((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
+  const handleToggle = useCallback(
+    async (index: number) => {
+      const nextValidated = !validatedIndices.has(index);
+
+      if (!repoFullName || !specPath) {
+        setValidatedIndices((prev) => {
+          const next = new Set(prev);
+          if (next.has(index)) next.delete(index);
+          else next.add(index);
+          return next;
+        });
+        return;
       }
-      return next;
-    });
-  }, []);
+
+      setCriteriaLoading(true);
+      const prevIndices = new Set(validatedIndices);
+      setValidatedIndices((prev) => {
+        const next = new Set(prev);
+        if (next.has(index)) next.delete(index);
+        else next.add(index);
+        return next;
+      });
+
+      try {
+        const encoded = encodeURIComponent(repoFullName);
+        const res = await fetch(`/api/repos/${encoded}/specs/validate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            path: specPath,
+            requirementIndex: index,
+            validated: nextValidated,
+          }),
+        });
+
+        if (!res.ok) {
+          setValidatedIndices(prevIndices);
+          const data = await res.json().catch(() => ({}));
+          alert(data.error ?? "Failed to save. Please try again.");
+        }
+      } finally {
+        setCriteriaLoading(false);
+      }
+    },
+    [repoFullName, specPath, validatedIndices]
+  );
 
   return (
     <div className="flex-1 min-w-0 flex flex-col bg-white min-h-screen overflow-y-auto">
@@ -114,6 +157,7 @@ export default function SpecDetailView({
             markdown={markdown}
             validatedIndices={validatedIndices}
             onToggle={handleToggle}
+            disabled={criteriaLoading}
           />
         )}
         {activeTab === "contracts" && (

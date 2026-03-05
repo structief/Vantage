@@ -5,34 +5,46 @@ import { createContext, useCallback, useContext, useState } from "react";
 type SpecStatus = "Draft" | "In review" | "Reviewed";
 
 interface SpecStatusContextValue {
-  getStatus: (slug: string) => SpecStatus;
-  updateSpecStatus: (slug: string, status: SpecStatus) => void;
+  getStatus: (pathOrSlug: string) => SpecStatus;
+  updateSpecStatus: (pathOrSlug: string, status: SpecStatus) => void;
+  preloadStatuses: (statuses: Record<string, SpecStatus>) => void;
 }
 
 const SpecStatusContext = createContext<SpecStatusContextValue>({
   getStatus: () => "Draft",
   updateSpecStatus: () => {},
+  preloadStatuses: () => {},
 });
 
 export function SpecStatusProvider({ children }: { children: React.ReactNode }) {
   const [statusMap, setStatusMap] = useState<Map<string, SpecStatus>>(new Map());
 
   const getStatus = useCallback(
-    (slug: string): SpecStatus => statusMap.get(slug) ?? "Draft",
+    (pathOrSlug: string): SpecStatus => statusMap.get(pathOrSlug) ?? "Draft",
     [statusMap]
   );
 
-  const updateSpecStatus = useCallback((slug: string, status: SpecStatus) => {
+  const updateSpecStatus = useCallback((pathOrSlug: string, status: SpecStatus) => {
     setStatusMap((prev) => {
-      if (prev.get(slug) === status) return prev;
+      if (prev.get(pathOrSlug) === status) return prev;
       const next = new Map(prev);
-      next.set(slug, status);
+      next.set(pathOrSlug, status);
+      return next;
+    });
+  }, []);
+
+  const preloadStatuses = useCallback((statuses: Record<string, SpecStatus>) => {
+    setStatusMap((prev) => {
+      const next = new Map(prev);
+      for (const [path, status] of Object.entries(statuses)) {
+        next.set(path, status);
+      }
       return next;
     });
   }, []);
 
   return (
-    <SpecStatusContext.Provider value={{ getStatus, updateSpecStatus }}>
+    <SpecStatusContext.Provider value={{ getStatus, updateSpecStatus, preloadStatuses }}>
       {children}
     </SpecStatusContext.Provider>
   );
