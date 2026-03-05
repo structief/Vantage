@@ -34,7 +34,7 @@ The top of the spec detail view SHALL display a title section containing: the sp
 - **WHEN** the spec detail view is rendered
 - **THEN** the title section SHALL display a status badge with one of three states: "Draft", "In Review", or "Approved"; the initial value SHALL be hardcoded as "Draft" (placeholder — no persistence required in this change)
 
-### [x] Requirement: Criteria Progress Bar
+### [ ] Requirement: Criteria Progress Bar
 Below the title section, the spec detail view SHALL display a horizontal progress bar that shows how many of the spec's criteria have been validated out of the total.
 
 #### Scenario: Progress bar with partial completion
