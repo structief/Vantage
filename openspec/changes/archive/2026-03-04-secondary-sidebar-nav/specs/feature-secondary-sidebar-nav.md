@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Secondary Sidebar — Always Visible
+### [x] Requirement: Secondary Sidebar — Always Visible
 The secondary sidebar SHALL always be rendered and visible whenever a repo is active (any `/repo/[owner]/[name]` route). It SHALL never be fully hidden or removed from the layout. When no repo is active (the `/` home route), the secondary sidebar SHALL NOT be rendered.
 
 #### Scenario: Secondary sidebar present on repo route
