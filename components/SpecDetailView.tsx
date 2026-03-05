@@ -8,7 +8,9 @@ import CriteriaProgressBar from "@/components/CriteriaProgressBar";
 import SpecTabBar, { type SpecTab } from "@/components/SpecTabBar";
 import SpecMarkdownRenderer from "@/components/SpecMarkdownRenderer";
 import CriteriaTab from "@/components/CriteriaTab";
+import ContractsTab from "@/components/ContractsTab";
 import FileListTab from "@/components/FileListTab";
+import type { OpenApiEndpoint, JsonSchemaDefinition, PrismaModel } from "@/lib/contract-parsers";
 
 interface Props {
   markdown: string;
@@ -16,7 +18,10 @@ interface Props {
   login: string | null;
   avatarUrl: string | null;
   date: string | null;
-  contractFiles: string[];
+  apiEndpoints: OpenApiEndpoint[];
+  jsonSchemaDefinitions: JsonSchemaDefinition[];
+  prismaModels: PrismaModel[];
+  contractsCount: number;
   testFiles: string[];
 }
 
@@ -26,7 +31,10 @@ export default function SpecDetailView({
   login,
   avatarUrl,
   date,
-  contractFiles,
+  apiEndpoints,
+  jsonSchemaDefinitions,
+  prismaModels,
+  contractsCount,
   testFiles,
 }: Props) {
   const [activeTab, setActiveTab] = useState<SpecTab>("overview");
@@ -75,7 +83,7 @@ export default function SpecDetailView({
           <SpecTabBar
             activeTab={activeTab}
             criteriaCount={criteriaCount}
-            contractsCount={contractFiles.length}
+            contractsCount={contractsCount}
             testsCount={testFiles.length}
             onTabChange={setActiveTab}
           />
@@ -93,7 +101,11 @@ export default function SpecDetailView({
           />
         )}
         {activeTab === "contracts" && (
-          <FileListTab files={contractFiles} emptyMessage="No contracts defined yet." />
+          <ContractsTab
+            apiEndpoints={apiEndpoints}
+            jsonSchemaDefinitions={jsonSchemaDefinitions}
+            prismaModels={prismaModels}
+          />
         )}
         {activeTab === "tests" && (
           <FileListTab files={testFiles} emptyMessage="No test flows defined yet." />

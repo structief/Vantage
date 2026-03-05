@@ -6,22 +6,32 @@ export interface LastCommitInfo {
   date: string;
 }
 
+export async function fetchFileContent(
+  token: string,
+  owner: string,
+  repo: string,
+  filePath: string
+): Promise<{ content: string; filename: string } | null> {
+  const octokit = new Octokit({ auth: token });
+  try {
+    const { data } = await octokit.rest.repos.getContent({ owner, repo, path: filePath });
+    if (Array.isArray(data) || data.type !== "file") return null;
+    const content = Buffer.from(data.content, "base64").toString("utf-8");
+    return { content, filename: data.name };
+  } catch (err: unknown) {
+    if ((err as { status?: number }).status === 404) return null;
+    throw err;
+  }
+}
+
 export async function fetchSpecFileContent(
   token: string,
   owner: string,
   repo: string,
   specPath: string
 ): Promise<{ markdown: string; filename: string } | null> {
-  const octokit = new Octokit({ auth: token });
-  try {
-    const { data } = await octokit.rest.repos.getContent({ owner, repo, path: specPath });
-    if (Array.isArray(data) || data.type !== "file") return null;
-    const markdown = Buffer.from(data.content, "base64").toString("utf-8");
-    return { markdown, filename: data.name };
-  } catch (err: unknown) {
-    if ((err as { status?: number }).status === 404) return null;
-    throw err;
-  }
+  const result = await fetchFileContent(token, owner, repo, specPath);
+  return result ? { markdown: result.content, filename: result.filename } : null;
 }
 
 export async function fetchLastCommit(

@@ -184,5 +184,5 @@ test("status dot updates in sidebar when criteria are validated, and persists af
 
   // Spec B's dot should be gray (Draft — not yet validated)
   const specBDot = specBButton.locator(".rounded-full");
-  await expect(specBDot).toHaveClass(/bg-gray-400/, { timeout: 3000 });
+  await expect(specBDot).toHaveClass(/bg-gray-300/, { timeout: 3000 });
 });

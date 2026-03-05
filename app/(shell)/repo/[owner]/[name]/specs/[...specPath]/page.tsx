@@ -1,7 +1,20 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { fetchSpecFileContent, fetchLastCommit, fetchDirectoryListing } from "@/lib/github-spec";
+import {
+  fetchSpecFileContent,
+  fetchFileContent,
+  fetchLastCommit,
+  fetchDirectoryListing,
+} from "@/lib/github-spec";
+import {
+  parseOpenApi,
+  parseJsonSchema,
+  parsePrismaSchema,
+  type OpenApiEndpoint,
+  type JsonSchemaDefinition,
+  type PrismaModel,
+} from "@/lib/contract-parsers";
 import SpecDetailView from "@/components/SpecDetailView";
 
 interface Props {
@@ -20,14 +33,46 @@ export default async function SpecDetailPage({ params }: Props) {
   // e.g. ["archive", "2026-03-04-xxx", "feature"]
   const specFilename = specPath[specPath.length - 1];
   const changePath = specPath.slice(0, -1).join("/");
-  const filePath = `openspec/changes/${changePath}/specs/${specFilename}.md`;
+  const basePath = `openspec/changes/${changePath}`;
+  const filePath = `${basePath}/specs/${specFilename}.md`;
 
-  const [specResult, commitInfo, contractFiles, testFiles] = await Promise.all([
-    fetchSpecFileContent(token, owner, name, filePath),
-    fetchLastCommit(token, owner, name, filePath),
-    fetchDirectoryListing(token, owner, name, `openspec/changes/${changePath}/contracts`),
-    fetchDirectoryListing(token, owner, name, `openspec/changes/${changePath}/tests`),
-  ]);
+  const [specResult, commitInfo, apiFiles, dataFiles, schemaResult, testFiles] =
+    await Promise.all([
+      fetchSpecFileContent(token, owner, name, filePath),
+      fetchLastCommit(token, owner, name, filePath),
+      fetchDirectoryListing(token, owner, name, `${basePath}/contracts/api`),
+      fetchDirectoryListing(token, owner, name, `${basePath}/contracts/data`),
+      fetchFileContent(token, owner, name, `${basePath}/data-model/schema.prisma`),
+      fetchDirectoryListing(token, owner, name, `${basePath}/tests`),
+    ]);
+
+  const apiEndpoints: OpenApiEndpoint[] = [];
+  const jsonSchemaDefinitions: JsonSchemaDefinition[] = [];
+  let prismaModels: PrismaModel[] = [];
+
+  for (const fn of apiFiles) {
+    const res = await fetchFileContent(token, owner, name, `${basePath}/contracts/api/${fn}`);
+    if (res?.content) {
+      const endpoints = parseOpenApi(res.content, fn);
+      if (endpoints) apiEndpoints.push(...endpoints);
+    }
+  }
+
+  for (const fn of dataFiles) {
+    const res = await fetchFileContent(token, owner, name, `${basePath}/contracts/data/${fn}`);
+    if (res?.content) {
+      const defs = parseJsonSchema(res.content, fn);
+      if (defs) jsonSchemaDefinitions.push(...defs);
+    }
+  }
+
+  if (schemaResult?.content) {
+    const models = parsePrismaSchema(schemaResult.content, "schema.prisma");
+    if (models) prismaModels = models;
+  }
+
+  const contractsCount =
+    apiFiles.length + dataFiles.length + (schemaResult ? 1 : 0);
 
   if (!specResult) {
     return (
@@ -53,7 +98,10 @@ export default async function SpecDetailPage({ params }: Props) {
       login={commitInfo?.login ?? null}
       avatarUrl={commitInfo?.avatarUrl ?? null}
       date={commitInfo?.date ?? null}
-      contractFiles={contractFiles}
+      apiEndpoints={apiEndpoints}
+      jsonSchemaDefinitions={jsonSchemaDefinitions}
+      prismaModels={prismaModels}
+      contractsCount={contractsCount}
       testFiles={testFiles}
     />
   );
