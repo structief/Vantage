@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Criteria Checkbox Toggle
+### [x] Requirement: Criteria Checkbox Toggle
 Each criterion row in the Criteria tab SHALL render an interactive checkbox. Clicking an unchecked checkbox SHALL mark that criterion as validated; clicking a checked checkbox SHALL mark it as unvalidated. The validated state for each criterion SHALL be stored locally in the browser (client-side state) for the duration of the session.
 
 #### Scenario: Checking a criterion
