@@ -34,7 +34,7 @@ The sidebar SHALL display at most 10 repositories, ordered by the date each repo
 - **WHEN** the sidebar already contains 10 repos
 - **THEN** the "+" button SHALL remain visible so users can still add repos (triggering eviction of the oldest-added)
 
-### Requirement: Add Repo to Sidebar
+### [x] Requirement: Add Repo to Sidebar
 The application SHALL allow the user to add a repository from their GitHub-accessible repository list to the sidebar via a picker UI triggered from the sidebar's "+" button.
 
 #### Scenario: Opening the picker
