@@ -15,6 +15,13 @@ import {
   type JsonSchemaDefinition,
   type PrismaModel,
 } from "@/lib/contract-parsers";
+import {
+  parseFlowMd,
+  extractTestGroups,
+  type TestSection,
+  type ParsedFlow,
+} from "@/lib/parse-flow-md";
+import { prisma } from "@/lib/db";
 import SpecDetailView from "@/components/SpecDetailView";
 
 interface Props {
@@ -74,6 +81,30 @@ export default async function SpecDetailPage({ params }: Props) {
   const contractsCount =
     apiFiles.length + dataFiles.length + (schemaResult ? 1 : 0);
 
+  const flowFiles = testFiles.filter((f) => f.endsWith(".flow.md"));
+  const allFlows: ParsedFlow[] = [];
+  for (const fn of flowFiles) {
+    const res = await fetchFileContent(token, owner, name, `${basePath}/tests/${fn}`);
+    if (res?.content) {
+      try {
+        const flows = parseFlowMd(res.content);
+        allFlows.push(...flows);
+      } catch {
+        // Parse failure: skip this file
+      }
+    }
+  }
+  const testSections: TestSection[] = extractTestGroups(allFlows);
+  const testGroupCount = testSections.length;
+
+  const repoFullName = `${owner}/${name}`;
+  const specSlug = specFilename;
+  const deploymentRuns = await prisma.testRun.findMany({
+    where: { repoFullName, changePath, specSlug },
+    orderBy: { runAt: "desc" },
+    take: 5,
+  });
+
   if (!specResult) {
     return (
       <div className="flex flex-col items-center justify-center flex-1 min-h-[60vh] text-center px-4">
@@ -102,7 +133,9 @@ export default async function SpecDetailPage({ params }: Props) {
       jsonSchemaDefinitions={jsonSchemaDefinitions}
       prismaModels={prismaModels}
       contractsCount={contractsCount}
-      testFiles={testFiles}
+      testSections={testSections}
+      deploymentRuns={deploymentRuns}
+      testsCount={testGroupCount}
     />
   );
 }

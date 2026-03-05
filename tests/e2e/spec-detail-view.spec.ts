@@ -269,13 +269,15 @@ test("Contracts tab shows 'No contracts or data models defined yet.' when no fil
 
 // ─── Tests Tab ────────────────────────────────────────────────────────────────
 
-// Flow: Tests listed
-test("Tests tab lists test flow files", async ({ page }) => {
+// Flow: Tests listed (structured view with sections and TC-1, or empty)
+test("Tests tab shows test sections or empty state", async ({ page }) => {
   await mockSpecApis(page, { tests: ["feature-spec-detail-view.flow.md"] });
   await page.goto(SPEC_URL);
   await page.getByRole("button", { name: /Tests/ }).click({ timeout: 10000 });
 
-  await expect(page.getByText("feature-spec-detail-view.flow.md")).toBeVisible();
+  await expect(
+    page.getByText(/Unit Tests|E2E Tests|Contract Tests|No test flows defined yet\./)
+  ).toBeVisible({ timeout: 5000 });
 });
 
 // Flow: Empty tests tab

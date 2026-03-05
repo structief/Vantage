@@ -9,8 +9,20 @@ import SpecTabBar, { type SpecTab } from "@/components/SpecTabBar";
 import SpecMarkdownRenderer from "@/components/SpecMarkdownRenderer";
 import CriteriaTab from "@/components/CriteriaTab";
 import ContractsTab from "@/components/ContractsTab";
-import FileListTab from "@/components/FileListTab";
+import TestsTab from "@/components/TestsTab";
 import type { OpenApiEndpoint, JsonSchemaDefinition, PrismaModel } from "@/lib/contract-parsers";
+import type { TestSection } from "@/lib/parse-flow-md";
+
+interface DeploymentRun {
+  id: string;
+  version: string | null;
+  environment: string | null;
+  runAt: Date;
+  passedCount: number;
+  failedCount: number;
+  source: string | null;
+  detailsUrl: string | null;
+}
 
 interface Props {
   markdown: string;
@@ -22,7 +34,9 @@ interface Props {
   jsonSchemaDefinitions: JsonSchemaDefinition[];
   prismaModels: PrismaModel[];
   contractsCount: number;
-  testFiles: string[];
+  testSections: TestSection[];
+  deploymentRuns: DeploymentRun[];
+  testsCount: number;
 }
 
 export default function SpecDetailView({
@@ -35,7 +49,9 @@ export default function SpecDetailView({
   jsonSchemaDefinitions,
   prismaModels,
   contractsCount,
-  testFiles,
+  testSections,
+  deploymentRuns,
+  testsCount,
 }: Props) {
   const [activeTab, setActiveTab] = useState<SpecTab>("overview");
   const [validatedIndices, setValidatedIndices] = useState<Set<number>>(new Set());
@@ -84,7 +100,7 @@ export default function SpecDetailView({
             activeTab={activeTab}
             criteriaCount={criteriaCount}
             contractsCount={contractsCount}
-            testsCount={testFiles.length}
+            testsCount={testsCount}
             onTabChange={setActiveTab}
           />
         </div>
@@ -108,7 +124,7 @@ export default function SpecDetailView({
           />
         )}
         {activeTab === "tests" && (
-          <FileListTab files={testFiles} emptyMessage="No test flows defined yet." />
+          <TestsTab sections={testSections} deploymentRuns={deploymentRuns} />
         )}
       </div>
     </div>
