@@ -19,7 +19,7 @@ The application SHALL display a persistent vertical sidebar containing user-pinn
 - **WHEN** a repo button is rendered in the sidebar
 - **THEN** it SHALL display exactly the first two letters of the repository name (not the owner), uppercase, centered within the square
 
-### Requirement: Sidebar Cap — Insertion Order
+### [x] Requirement: Sidebar Cap — Insertion Order
 The sidebar SHALL display at most 10 repositories, ordered by the date each repo was added (oldest first, stable). The sidebar order SHALL NOT change when the user navigates to a repo. When a new repo is added and the sidebar already contains 10 repos, the least-recently-added repo SHALL be evicted automatically without user confirmation.
 
 #### Scenario: Sidebar order is stable on navigation
