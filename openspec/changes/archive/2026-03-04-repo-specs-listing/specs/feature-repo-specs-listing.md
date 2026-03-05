@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Specs Listing API
+### [x] Requirement: Specs Listing API
 A `GET /api/repos/[encodedFullName]/specs` endpoint SHALL return all spec `.md` files discovered in the connected repo's `openspec/changes/` directory. The response SHALL include one entry per file with the fields `slug` (filename without `.md`), `group` (subdirectory name, or `null` for changes directly under `openspec/changes/`), `path` (full relative path in the repo), and `status` (`"active"` or `"archived"`). Results SHALL be ordered: ungrouped active entries first, then named groups alphabetically, then archived entries last.
 
 #### Scenario: Specs returned with correct grouping
