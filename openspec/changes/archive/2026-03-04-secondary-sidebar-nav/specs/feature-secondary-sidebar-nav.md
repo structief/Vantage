@@ -11,7 +11,7 @@ The secondary sidebar SHALL always be rendered and visible whenever a repo is ac
 - **WHEN** the user is on the `/` home route (no active repo)
 - **THEN** the secondary sidebar SHALL NOT be rendered; the primary repo icon sidebar fills the full left edge
 
-### Requirement: Secondary Sidebar Toggle
+### [x] Requirement: Secondary Sidebar Toggle
 A toggle button SHALL appear at the top of the primary repo icon sidebar. It controls the **display mode** of the secondary sidebar: either **expanded** (icons + text labels) or **collapsed** (icons only, or two-letter initials for project groups). The toggle state SHALL persist in `localStorage`. The default state is expanded.
 
 #### Scenario: Switching to collapsed mode
