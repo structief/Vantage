@@ -94,7 +94,7 @@ The Criteria tab SHALL list all criteria items extracted from the spec's criteri
 - **WHEN** the "Criteria" tab is active and the spec has no criteria
 - **THEN** the tab content area SHALL display "No criteria defined for this spec."
 
-### Requirement: Contracts Tab Content
+### [x] Requirement: Contracts Tab Content
 The Contracts tab SHALL list all contract files associated with the spec's change directory (`contracts/` folder within the change). Each entry shows the filename and a document icon.
 
 #### Scenario: Contracts listed
