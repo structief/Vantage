@@ -72,7 +72,7 @@ Below the criteria progress bar, the spec detail view SHALL display a horizontal
 - **WHEN** the spec has associated test flow files
 - **THEN** the "Tests" tab SHALL display a numeric badge showing the count of test flow files
 
-### Requirement: Overview Tab Content
+### [x] Requirement: Overview Tab Content
 The Overview tab SHALL render the full body of the spec markdown file as formatted HTML. All standard markdown constructs SHALL be rendered (headings, paragraphs, lists, blockquotes, inline code, code blocks). Frontmatter SHALL be stripped before rendering.
 
 #### Scenario: Markdown rendered as HTML
