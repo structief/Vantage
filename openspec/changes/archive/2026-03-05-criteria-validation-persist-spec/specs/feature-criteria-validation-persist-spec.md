@@ -15,7 +15,7 @@ Each requirement heading SHALL include a checkbox marker immediately before the 
 - **WHEN** a requirement heading is `### Requirement: Foo` (no `[ ]` or `[x]` prefix)
 - **THEN** the requirement SHALL be treated as unvalidated and the Criteria tab SHALL display it as unchecked
 
-### Requirement: Toggle Criteria Commits to Spec File
+### [x] Requirement: Toggle Criteria Commits to Spec File
 When the user toggles a criterion's validation state in the Criteria tab, the application SHALL update the spec markdown file in the repository and create a git commit. The commit message SHALL describe the change (e.g., "Validate: Foo" or "Unvalidate: Foo"). The update SHALL change only the checkbox in that requirement's heading (`[ ]` ↔ `[x]`); the rest of the spec SHALL remain unchanged.
 
 #### Scenario: Commit on validate
