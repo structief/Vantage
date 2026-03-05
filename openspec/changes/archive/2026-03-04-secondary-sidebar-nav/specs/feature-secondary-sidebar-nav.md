@@ -44,7 +44,7 @@ Both modes SHALL share the same light background (`#f7f7f8`) and right border, m
 - **WHEN** the secondary sidebar is in collapsed mode with an active repo
 - **THEN** only the repo's gradient icon SHALL be visible at the top (no text)
 
-### Requirement: Navigation Links
+### [x] Requirement: Navigation Links
 The secondary sidebar SHALL display three fixed navigation links, each with a matching icon:
 
 1. **All Specs** — grid/squares icon
