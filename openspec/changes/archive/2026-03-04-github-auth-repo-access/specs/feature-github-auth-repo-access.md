@@ -34,7 +34,7 @@ A user SHALL be able to sign out of Vantage at any time. On logout, the server-s
 
 ---
 
-### Requirement: Accessible Repository Listing
+### [x] Requirement: Accessible Repository Listing
 After login, Vantage SHALL fetch and display all GitHub repositories accessible to the authenticated user. This includes:
 - Repositories owned by the user
 - Repositories in organisations the user is a member of
