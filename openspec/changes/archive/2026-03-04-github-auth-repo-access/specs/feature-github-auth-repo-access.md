@@ -77,7 +77,7 @@ After successful login, Vantage SHALL display the authenticated user's GitHub di
 
 ---
 
-### Requirement: Session Persistence
+### [x] Requirement: Session Persistence
 The authenticated session SHALL persist across page reloads and browser restarts until the user explicitly logs out or the session expires. Session state SHALL be stored server-side; only a session token SHALL be stored client-side (HTTP-only cookie).
 
 #### Scenario: Page reload while authenticated
