@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Spec Detail Route
+### [x] Requirement: Spec Detail Route
 When the user selects a spec from the secondary sidebar or the spec list, the application SHALL navigate to `/repo/[owner]/[name]/specs/[spec-slug]` and render the spec detail view in the main content area.
 
 #### Scenario: Navigating to a spec
