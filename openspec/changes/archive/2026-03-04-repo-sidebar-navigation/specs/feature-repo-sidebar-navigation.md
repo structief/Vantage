@@ -53,7 +53,7 @@ The application SHALL allow the user to add a repository from their GitHub-acces
 - **WHEN** the user dismisses the picker (Escape key or clicking outside)
 - **THEN** no repo SHALL be added and the sidebar state SHALL remain unchanged
 
-### Requirement: Remove Repo from Sidebar
+### [x] Requirement: Remove Repo from Sidebar
 The application SHALL allow the user to remove a pinned repository from the sidebar.
 
 #### Scenario: Removing a repo
