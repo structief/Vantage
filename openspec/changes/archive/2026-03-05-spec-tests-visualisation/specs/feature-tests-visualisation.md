@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Tests Tab Structured Visualisation
+### [x] Requirement: Tests Tab Structured Visualisation
 
 The spec detail view SHALL replace the current Tests tab (simple file list) with a structured visualisation that groups test cases by type, displays individual test case descriptions, and surfaces the last deployment run results — aligned with the Tests spec view UX.
 
