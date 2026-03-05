@@ -64,7 +64,7 @@ The application SHALL allow the user to remove a pinned repository from the side
 - **WHEN** the user selects "Remove from sidebar" from the context menu
 - **THEN** the repo SHALL be removed from the sidebar immediately, and if it was the active repo, the application SHALL redirect to `/`
 
-### Requirement: Repo Context Switching
+### [x] Requirement: Repo Context Switching
 The application SHALL switch the active repository context when the user clicks a repo button in the sidebar.
 
 #### Scenario: Switching to a repo
