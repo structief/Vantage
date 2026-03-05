@@ -26,7 +26,7 @@ The `CriteriaProgressBar` component SHALL reflect the number of validated criter
 - **WHEN** all criteria are marked as validated
 - **THEN** the progress bar SHALL be 100% filled and SHALL render in green
 
-### Requirement: Spec Status Derived from Validation State
+### [x] Requirement: Spec Status Derived from Validation State
 The spec status badge displayed in `SpecTitleSection` SHALL be computed from the ratio of validated criteria to total criteria. The status SHALL follow these rules:
 - **Draft**: zero criteria validated (or no criteria defined)
 - **In review**: at least one but not all criteria validated
