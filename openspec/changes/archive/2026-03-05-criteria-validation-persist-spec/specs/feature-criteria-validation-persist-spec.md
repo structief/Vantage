@@ -45,7 +45,7 @@ When loading a spec for the spec detail view, the server SHALL parse the spec ma
 - **WHEN** the user navigates to a spec (or the secondary sidebar renders)
 - **THEN** the spec status badge (Draft / In review / Reviewed) and the status dot in the secondary sidebar SHALL be derived from the persisted validation state, not from session-only state
 
-### Requirement: Sidebar Status for Non-Archived Specs
+### [x] Requirement: Sidebar Status for Non-Archived Specs
 The secondary sidebar SHALL display the correct status dot (Draft / In review / Reviewed) for each non-archived spec. The application SHALL NOT parse archived specs on initial load; archived specs SHALL be parsed and their status SHALL be resolved only when the user loads one. This avoids overloading the system with speculative fetches for archived content.
 
 #### Scenario: Non-archived specs show correct dot in sidebar
