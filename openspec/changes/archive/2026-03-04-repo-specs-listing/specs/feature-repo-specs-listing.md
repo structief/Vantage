@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Specs Listing API
+### [x] Requirement: Specs Listing API
 A `GET /api/repos/[encodedFullName]/specs` endpoint SHALL return all spec `.md` files discovered in the connected repo's `openspec/changes/` directory. The response SHALL include one entry per file with the fields `slug` (filename without `.md`), `group` (subdirectory name, or `null` for changes directly under `openspec/changes/`), `path` (full relative path in the repo), and `status` (`"active"` or `"archived"`). Results SHALL be ordered: ungrouped active entries first, then named groups alphabetically, then archived entries last.
 
 #### Scenario: Specs returned with correct grouping
@@ -19,7 +19,7 @@ A `GET /api/repos/[encodedFullName]/specs` endpoint SHALL return all spec `.md` 
 - **WHEN** `encodedFullName` decodes to a string without a `/`
 - **THEN** the response SHALL be `400` with `{ "error": "Invalid repository name" }`
 
-### Requirement: Spec Content API
+### [x] Requirement: Spec Content API
 A `GET /api/repos/[encodedFullName]/spec-content?path=<encoded-path>` endpoint SHALL return the raw text content of a single spec file identified by its full path within the repo.
 
 #### Scenario: File content returned
@@ -38,7 +38,7 @@ A `GET /api/repos/[encodedFullName]/spec-content?path=<encoded-path>` endpoint S
 - **WHEN** the request has no valid session
 - **THEN** the response SHALL be `401` with `{ "error": "Not authenticated" }`
 
-### Requirement: Spec Detail Page — Slug and Title
+### [x] Requirement: Spec Detail Page — Slug and Title
 When the user navigates to `/repo/[owner]/[name]/specs/[slug]`, the page SHALL display the spec's slug and its title. The title SHALL be extracted from the first `# Heading` line of the spec file content; if no such line exists the slug SHALL be used as the title.
 
 #### Scenario: Selecting a spec from the sidebar

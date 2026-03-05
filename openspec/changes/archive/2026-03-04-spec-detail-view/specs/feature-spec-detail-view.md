@@ -34,7 +34,7 @@ The top of the spec detail view SHALL display a title section containing: the sp
 - **WHEN** the spec detail view is rendered
 - **THEN** the title section SHALL display a status badge with one of three states: "Draft", "In Review", or "Approved"; the initial value SHALL be hardcoded as "Draft" (placeholder — no persistence required in this change)
 
-### Requirement: Criteria Progress Bar
+### [x] Requirement: Criteria Progress Bar
 Below the title section, the spec detail view SHALL display a horizontal progress bar that shows how many of the spec's criteria have been validated out of the total.
 
 #### Scenario: Progress bar with partial completion
@@ -49,7 +49,7 @@ Below the title section, the spec detail view SHALL display a horizontal progres
 - **WHEN** all criteria are validated
 - **THEN** the progress bar SHALL display as fully filled with a "completed" visual treatment (e.g., green fill)
 
-### Requirement: Horizontal Tab Navigation
+### [x] Requirement: Horizontal Tab Navigation
 Below the criteria progress bar, the spec detail view SHALL display a horizontal tab bar with four tabs: "Overview", "Criteria", "Contracts", and "Tests". Only one tab SHALL be active at a time. The active tab SHALL be visually distinguished with an underline indicator. The default active tab SHALL be "Overview".
 
 #### Scenario: Default tab on load
