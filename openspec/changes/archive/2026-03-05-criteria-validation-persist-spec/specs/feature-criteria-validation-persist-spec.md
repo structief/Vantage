@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Inline Checkbox for Validation State in Spec Markdown
+### [x] Requirement: Inline Checkbox for Validation State in Spec Markdown
 Each requirement heading SHALL include a checkbox marker immediately before the requirement name: `[ ]` for unvalidated and `[x]` for validated. The format SHALL be `### [ ] Requirement: <name>` or `### [x] Requirement: <name>`. Legacy headings without a checkbox SHALL be treated as unvalidated (`[ ]`). This keeps validation visible in the raw .md and tied to each requirement, so reordering or editing the spec does not desync state.
 
 #### Scenario: Parsing validated state from checkbox
