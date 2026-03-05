@@ -1,0 +1,24 @@
+// Migration note: Add TestRun model for surfacing deployment/test run results in the
+// Tests tab. Stores pass/fail summaries from local runner or future CI integration.
+// Spec reference: specs/feature-tests-visualisation.md
+// Requirement: Tests Tab Structured Visualisation (Deployment runs section)
+
+// Requirement: Deployment runs section with last results
+// Stores one row per test run; queried by repo + changePath + specSlug for Tests tab.
+model TestRun {
+  id           String    @id @default(cuid())
+  repoFullName String
+  changePath   String
+  specSlug     String
+  version      String?
+  environment  String?
+  runAt        DateTime
+  passedCount  Int       @default(0)
+  failedCount  Int       @default(0)
+  source       String?
+  detailsUrl   String?
+  createdAt    DateTime  @default(now())
+
+  @@index([repoFullName, changePath, specSlug])
+  @@map("test_runs")
+}

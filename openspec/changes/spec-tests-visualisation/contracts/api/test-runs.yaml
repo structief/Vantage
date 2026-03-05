@@ -1,0 +1,111 @@
+openapi: "3.0.3"
+info:
+  title: "Test Runs API"
+  version: "1.0.0"
+  description: >
+    Records test run results for surfacing in the Tests tab. Used by local test
+    runner integration (Vitest/Playwright reporter) or future CI ingest.
+
+paths:
+  /api/repos/{encodedFullName}/test-runs:
+    post:
+      summary: "Record a test run result"
+      operationId: "recordTestRun"
+      description: >
+        Stores a deployment/test run summary for a spec. Used to surface last
+        results in the Tests tab. Requires an authenticated session and access
+        to the repo.
+      parameters:
+        - name: encodedFullName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: >
+            URL-encoded full repo name, e.g. encodeURIComponent("owner/name")
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestRunRequest"
+      responses:
+        "200":
+          description: "Test run recorded successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestRunResponse"
+        "400":
+          description: "Invalid request (missing required fields)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Not authenticated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    TestRunRequest:
+      type: object
+      required:
+        - changePath
+        - specSlug
+        - passedCount
+        - failedCount
+      properties:
+        changePath:
+          type: string
+          description: "Path within openspec/changes/ (e.g. 'spec-tests-visualisation')"
+          example: "spec-tests-visualisation"
+        specSlug:
+          type: string
+          description: "Spec filename without .md (e.g. 'feature-tests-visualisation')"
+          example: "feature-tests-visualisation"
+        version:
+          type: string
+          nullable: true
+          description: "Optional version identifier (e.g. 'v1.3.0')"
+        environment:
+          type: string
+          nullable: true
+          description: "Environment where tests ran (e.g. 'Prod', 'Staging')"
+        passedCount:
+          type: integer
+          minimum: 0
+          description: "Number of tests that passed"
+        failedCount:
+          type: integer
+          minimum: 0
+          description: "Number of tests that failed"
+        source:
+          type: string
+          nullable: true
+          description: "Source of the run (e.g. 'ci-pipeline', 'local')"
+        detailsUrl:
+          type: string
+          nullable: true
+          description: "Optional URL to detailed run results"
+
+    TestRunResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: "Created TestRun record ID"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: "Human-readable error message"
