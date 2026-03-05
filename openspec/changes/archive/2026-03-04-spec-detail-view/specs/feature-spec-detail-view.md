@@ -11,7 +11,7 @@ When the user selects a spec from the secondary sidebar or the spec list, the ap
 - **WHEN** the user navigates to a `[spec-slug]` that does not exist in the repo
 - **THEN** the main content area SHALL display a "Spec not found" message with a link back to the spec list
 
-### Requirement: Spec Title Section
+### [x] Requirement: Spec Title Section
 The top of the spec detail view SHALL display a title section containing: the spec's readable name (derived from the spec's frontmatter `title` field, or the filename if absent), the GitHub username and avatar of the last git committer for the spec file, the date of the last commit to the spec file formatted as "Updated [Month] [Day], [Year]", and a status badge indicating the spec's lifecycle state.
 
 #### Scenario: Title rendered from frontmatter
