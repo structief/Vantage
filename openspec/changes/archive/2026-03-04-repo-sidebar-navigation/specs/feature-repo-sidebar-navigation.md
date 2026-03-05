@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Repo Sidebar
+### [x] Requirement: Repo Sidebar
 The application SHALL display a persistent vertical sidebar containing user-pinned repositories as square icon buttons, positioned to the left of the main navigation panel. Each repo button SHALL show the first two uppercase letters of the repository name over a deterministic gradient background derived from the repo name. The sidebar SHALL include an "Add repo" button (+ icon) that opens a picker for adding repos from the user's accessible repository list.
 
 #### Scenario: Sidebar renders pinned repos
