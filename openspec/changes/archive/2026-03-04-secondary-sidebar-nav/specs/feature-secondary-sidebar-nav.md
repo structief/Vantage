@@ -69,7 +69,7 @@ Each link SHALL navigate to the corresponding sub-route of the active repo: `/re
 - **WHEN** the user clicks a navigation link
 - **THEN** the browser SHALL navigate to the corresponding route and that link SHALL enter the active/highlighted state
 
-### Requirement: Projects Section
+### [x] Requirement: Projects Section
 Below the navigation links, the secondary sidebar SHALL display a "PROJECTS" section.
 
 In **expanded mode**: shows a "PROJECTS" header (uppercase, small, subdued), followed by collapsable project group rows. Each row shows the project name in semibold text and a spec count badge on the right. A right-pointing chevron indicates collapsed state; it rotates downward when expanded. Expanded groups list their specs indented below, each with a document icon.
