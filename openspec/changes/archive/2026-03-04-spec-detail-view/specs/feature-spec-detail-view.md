@@ -105,7 +105,7 @@ The Contracts tab SHALL list all contract files associated with the spec's chang
 - **WHEN** the "Contracts" tab is active and no contract files exist
 - **THEN** the tab content area SHALL display "No contracts defined yet."
 
-### Requirement: Tests Tab Content
+### [x] Requirement: Tests Tab Content
 The Tests tab SHALL list all test flow files associated with the spec's change directory (`tests/` folder within the change). Each entry shows the test flow filename and a document icon.
 
 #### Scenario: Tests listed
