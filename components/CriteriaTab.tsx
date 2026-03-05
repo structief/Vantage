@@ -29,7 +29,7 @@ export default function CriteriaTab({ markdown, validatedIndices, onToggle }: Pr
               role="checkbox"
               className={`shrink-0 w-4 h-4 rounded border transition-colors ${
                 validated
-                  ? "bg-gray-900 border-gray-900 flex items-center justify-center"
+                  ? "bg-gray-400 border-gray-400 flex items-center justify-center"
                   : "bg-white border-gray-200 hover:border-gray-400"
               }`}
             >
@@ -48,7 +48,7 @@ export default function CriteriaTab({ markdown, validatedIndices, onToggle }: Pr
               )}
             </button>
             <span
-              className="flex-1 text-[13px] text-gray-700 leading-snug cursor-pointer select-none"
+              className={`flex-1 text-[13px] leading-snug cursor-pointer select-none ${validated ? "text-gray-400 hover:text-gray-500 line-through": "text-gray-900 hover:text-gray-700"}`}
               onClick={() => onToggle(i)}
             >
               {name}
