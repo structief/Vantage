@@ -11,7 +11,7 @@ Each criterion row in the Criteria tab SHALL render an interactive checkbox. Cli
 - **WHEN** the user clicks a checked checkbox on a criterion row
 - **THEN** the checkbox SHALL appear unchecked/empty, and the criterion status badge SHALL change from "validated" back to "pending"
 
-### Requirement: Criteria Validation Progress Bar
+### [x] Requirement: Criteria Validation Progress Bar
 The `CriteriaProgressBar` component SHALL reflect the number of validated criteria in real time. As users check or uncheck criteria, the progress bar fill and the "X of Y criteria validated" counter SHALL update immediately.
 
 #### Scenario: Progress bar advances on validation
