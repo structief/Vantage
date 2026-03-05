@@ -64,7 +64,7 @@ The list SHALL be sourced from the GitHub API using the authenticated user's OAu
 
 ---
 
-### Requirement: User Profile Display
+### [x] Requirement: User Profile Display
 After successful login, Vantage SHALL display the authenticated user's GitHub display name (`name`, not `login`) and avatar in the navigation header on all protected pages. The display name and avatar URL SHALL be persisted in the local store (keyed by `github_login`) so they remain available across server restarts without requiring a re-fetch from GitHub.
 
 #### Scenario: Display name and avatar visible after login
