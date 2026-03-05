@@ -38,6 +38,15 @@ export function extractRequirementNames(markdown: string): string[] {
   return names;
 }
 
+export function deriveStatus(
+  validated: number,
+  total: number
+): "Draft" | "In review" | "Reviewed" {
+  if (total === 0 || validated === 0) return "Draft";
+  if (validated === total) return "Reviewed";
+  return "In review";
+}
+
 export function specPathToUrl(repoBase: string, specFullPath: string): string {
   // specFullPath: "openspec/changes/<changePath>/specs/<filename>.md"
   const withoutBase = specFullPath.replace(/^openspec\/changes\//, "");
