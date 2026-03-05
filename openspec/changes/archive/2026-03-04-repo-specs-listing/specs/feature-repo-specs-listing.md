@@ -19,7 +19,7 @@ A `GET /api/repos/[encodedFullName]/specs` endpoint SHALL return all spec `.md` 
 - **WHEN** `encodedFullName` decodes to a string without a `/`
 - **THEN** the response SHALL be `400` with `{ "error": "Invalid repository name" }`
 
-### Requirement: Spec Content API
+### [x] Requirement: Spec Content API
 A `GET /api/repos/[encodedFullName]/spec-content?path=<encoded-path>` endpoint SHALL return the raw text content of a single spec file identified by its full path within the repo.
 
 #### Scenario: File content returned
