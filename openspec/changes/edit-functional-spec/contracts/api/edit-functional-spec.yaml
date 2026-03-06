@@ -1,0 +1,66 @@
+openapi: "3.0.3"
+info:
+  title: "Spec Editing API"
+  version: "1.0.0"
+  description: "API for updating functional spec markdown files from the Vantage spec viewer."
+
+paths:
+  /api/repos/{encodedFullName}/specs/update:
+    put:
+      summary: "Update a spec markdown file"
+      operationId: "updateSpecFile"
+      description: "Commits updated markdown content for a spec file to the connected GitHub repository."
+      parameters:
+        - in: path
+          name: encodedFullName
+          required: true
+          schema:
+            type: string
+          description: "URL-encoded `<owner>/<repo>` of the target GitHub repository."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSpecRequest"
+      responses:
+        "200":
+          description: "Spec file updated and committed successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateSpecResponse"
+        "400":
+          description: "Invalid input (e.g. missing path or content)."
+        "401":
+          description: "User is not authenticated with GitHub."
+        "404":
+          description: "Target spec file not found in the repository."
+        "409":
+          description: "Commit conflict due to out-of-date file SHA."
+        "500":
+          description: "Unexpected error updating the file via GitHub."
+
+components:
+  schemas:
+    UpdateSpecRequest:
+      type: object
+      required:
+        - path
+        - content
+      properties:
+        path:
+          type: string
+          description: "Repository-relative path to the spec markdown file (e.g. `openspec/specs/repo-sidebar-navigation/spec.md`)."
+        content:
+          type: string
+          description: "The full updated markdown content of the spec file."
+
+    UpdateSpecResponse:
+      type: object
+      required:
+        - sha
+      properties:
+        sha:
+          type: string
+          description: "The commit SHA created by the update."
