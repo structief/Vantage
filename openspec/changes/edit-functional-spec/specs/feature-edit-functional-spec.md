@@ -47,7 +47,7 @@ When a requirement heading (`### Requirement: <name>`) is renamed inside the edi
 
 ---
 
-### Requirement: Spec Save with Git Commit
+### [x] Requirement: Spec Save with Git Commit
 
 When the user confirms a save from edit mode, the updated markdown SHALL be committed to the connected git repository via the GitHub API with an auto-generated commit message. A loading overlay SHALL be displayed over the editor during the API call, matching the style used by the criteria validation overlay.
 
