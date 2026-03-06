@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Secondary Sidebar — Always Visible
+### [x] Requirement: Secondary Sidebar — Always Visible
 The secondary sidebar SHALL always be rendered and visible whenever a repo is active (any `/repo/[owner]/[name]` route). It SHALL never be fully hidden or removed from the layout. When no repo is active (the `/` home route), the secondary sidebar SHALL NOT be rendered.
 
 #### Scenario: Secondary sidebar present on repo route
@@ -11,7 +11,7 @@ The secondary sidebar SHALL always be rendered and visible whenever a repo is ac
 - **WHEN** the user is on the `/` home route (no active repo)
 - **THEN** the secondary sidebar SHALL NOT be rendered; the primary repo icon sidebar fills the full left edge
 
-### Requirement: Secondary Sidebar Toggle
+### [x] Requirement: Secondary Sidebar Toggle
 A toggle button SHALL appear at the top of the primary repo icon sidebar. It controls the **display mode** of the secondary sidebar: either **expanded** (icons + text labels) or **collapsed** (icons only, or two-letter initials for project groups). The toggle state SHALL persist in `localStorage`. The default state is expanded.
 
 #### Scenario: Switching to collapsed mode
@@ -26,7 +26,7 @@ A toggle button SHALL appear at the top of the primary repo icon sidebar. It con
 - **WHEN** the user changes the toggle mode and navigates to a different page within the same repo context
 - **THEN** the secondary sidebar SHALL remain in the mode the user last set
 
-### Requirement: Secondary Sidebar Panel
+### [x] Requirement: Secondary Sidebar Panel
 The secondary sidebar SHALL display:
 1. The active repo's name and gradient icon at the top
 2. Three fixed navigation links below the repo identity area
@@ -44,7 +44,7 @@ Both modes SHALL share the same light background (`#f7f7f8`) and right border, m
 - **WHEN** the secondary sidebar is in collapsed mode with an active repo
 - **THEN** only the repo's gradient icon SHALL be visible at the top (no text)
 
-### Requirement: Navigation Links
+### [x] Requirement: Navigation Links
 The secondary sidebar SHALL display three fixed navigation links, each with a matching icon:
 
 1. **All Specs** — grid/squares icon
@@ -69,7 +69,7 @@ Each link SHALL navigate to the corresponding sub-route of the active repo: `/re
 - **WHEN** the user clicks a navigation link
 - **THEN** the browser SHALL navigate to the corresponding route and that link SHALL enter the active/highlighted state
 
-### Requirement: Projects Section
+### [x] Requirement: Projects Section
 Below the navigation links, the secondary sidebar SHALL display a "PROJECTS" section.
 
 In **expanded mode**: shows a "PROJECTS" header (uppercase, small, subdued), followed by collapsable project group rows. Each row shows the project name in semibold text and a spec count badge on the right. A right-pointing chevron indicates collapsed state; it rotates downward when expanded. Expanded groups list their specs indented below, each with a document icon.

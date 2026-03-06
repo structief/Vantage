@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Repo Sidebar
+### [x] Requirement: Repo Sidebar
 The application SHALL display a persistent vertical sidebar containing user-pinned repositories as square icon buttons, positioned to the left of the main navigation panel. Each repo button SHALL show the first two uppercase letters of the repository name over a deterministic gradient background derived from the repo name. The sidebar SHALL include an "Add repo" button (+ icon) that opens a picker for adding repos from the user's accessible repository list.
 
 #### Scenario: Sidebar renders pinned repos
@@ -19,7 +19,7 @@ The application SHALL display a persistent vertical sidebar containing user-pinn
 - **WHEN** a repo button is rendered in the sidebar
 - **THEN** it SHALL display exactly the first two letters of the repository name (not the owner), uppercase, centered within the square
 
-### Requirement: Sidebar Cap — Insertion Order
+### [x] Requirement: Sidebar Cap — Insertion Order
 The sidebar SHALL display at most 10 repositories, ordered by the date each repo was added (oldest first, stable). The sidebar order SHALL NOT change when the user navigates to a repo. When a new repo is added and the sidebar already contains 10 repos, the least-recently-added repo SHALL be evicted automatically without user confirmation.
 
 #### Scenario: Sidebar order is stable on navigation
@@ -34,7 +34,7 @@ The sidebar SHALL display at most 10 repositories, ordered by the date each repo
 - **WHEN** the sidebar already contains 10 repos
 - **THEN** the "+" button SHALL remain visible so users can still add repos (triggering eviction of the oldest-added)
 
-### Requirement: Add Repo to Sidebar
+### [x] Requirement: Add Repo to Sidebar
 The application SHALL allow the user to add a repository from their GitHub-accessible repository list to the sidebar via a picker UI triggered from the sidebar's "+" button.
 
 #### Scenario: Opening the picker
@@ -53,7 +53,7 @@ The application SHALL allow the user to add a repository from their GitHub-acces
 - **WHEN** the user dismisses the picker (Escape key or clicking outside)
 - **THEN** no repo SHALL be added and the sidebar state SHALL remain unchanged
 
-### Requirement: Remove Repo from Sidebar
+### [x] Requirement: Remove Repo from Sidebar
 The application SHALL allow the user to remove a pinned repository from the sidebar.
 
 #### Scenario: Removing a repo
@@ -64,7 +64,7 @@ The application SHALL allow the user to remove a pinned repository from the side
 - **WHEN** the user selects "Remove from sidebar" from the context menu
 - **THEN** the repo SHALL be removed from the sidebar immediately, and if it was the active repo, the application SHALL redirect to `/`
 
-### Requirement: Repo Context Switching
+### [x] Requirement: Repo Context Switching
 The application SHALL switch the active repository context when the user clicks a repo button in the sidebar.
 
 #### Scenario: Switching to a repo

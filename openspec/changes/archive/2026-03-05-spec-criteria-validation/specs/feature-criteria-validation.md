@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Criteria Checkbox Toggle
+### [x] Requirement: Criteria Checkbox Toggle
 Each criterion row in the Criteria tab SHALL render an interactive checkbox. Clicking an unchecked checkbox SHALL mark that criterion as validated; clicking a checked checkbox SHALL mark it as unvalidated. The validated state for each criterion SHALL be stored locally in the browser (client-side state) for the duration of the session.
 
 #### Scenario: Checking a criterion
@@ -11,7 +11,7 @@ Each criterion row in the Criteria tab SHALL render an interactive checkbox. Cli
 - **WHEN** the user clicks a checked checkbox on a criterion row
 - **THEN** the checkbox SHALL appear unchecked/empty, and the criterion status badge SHALL change from "validated" back to "pending"
 
-### Requirement: Criteria Validation Progress Bar
+### [x] Requirement: Criteria Validation Progress Bar
 The `CriteriaProgressBar` component SHALL reflect the number of validated criteria in real time. As users check or uncheck criteria, the progress bar fill and the "X of Y criteria validated" counter SHALL update immediately.
 
 #### Scenario: Progress bar advances on validation
@@ -26,7 +26,7 @@ The `CriteriaProgressBar` component SHALL reflect the number of validated criter
 - **WHEN** all criteria are marked as validated
 - **THEN** the progress bar SHALL be 100% filled and SHALL render in green
 
-### Requirement: Spec Status Derived from Validation State
+### [x] Requirement: Spec Status Derived from Validation State
 The spec status badge displayed in `SpecTitleSection` SHALL be computed from the ratio of validated criteria to total criteria. The status SHALL follow these rules:
 - **Draft**: zero criteria validated (or no criteria defined)
 - **In review**: at least one but not all criteria validated

@@ -51,7 +51,7 @@ If the repo has no openspec changes, the section SHALL display "No projects yet.
 
 ## ADDED Requirements
 
-### Requirement: Spec Status Dot in Sidebar
+### [x] Requirement: Spec Status Dot in Sidebar
 Each spec listed in the secondary sidebar SHALL display a small colored dot immediately before the spec name. The dot reflects the spec's current review status and SHALL update in real-time as the user validates or unvalidates criteria in the spec detail view.
 
 The status-to-color mapping SHALL match the mapping used in the spec detail view title section:

@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: GitHub OAuth Login
+### [x] Requirement: GitHub OAuth Login
 A user SHALL be able to initiate a login flow from the Vantage UI using their GitHub account. Vantage SHALL use GitHub OAuth (OAuth 2.0 Authorization Code flow) as the sole identity mechanism. No username/password or separate registration is required. After successful authentication, the user's GitHub identity (login, name, avatar URL) SHALL be stored in the session.
 
 #### Scenario: Successful login
@@ -21,7 +21,7 @@ A user SHALL be able to initiate a login flow from the Vantage UI using their Gi
 
 ---
 
-### Requirement: GitHub OAuth Logout
+### [x] Requirement: GitHub OAuth Logout
 A user SHALL be able to sign out of Vantage at any time. On logout, the server-side session MUST be invalidated and all locally cached GitHub tokens MUST be cleared.
 
 #### Scenario: Successful logout
@@ -34,7 +34,7 @@ A user SHALL be able to sign out of Vantage at any time. On logout, the server-s
 
 ---
 
-### Requirement: Accessible Repository Listing
+### [x] Requirement: Accessible Repository Listing
 After login, Vantage SHALL fetch and display all GitHub repositories accessible to the authenticated user. This includes:
 - Repositories owned by the user
 - Repositories in organisations the user is a member of
@@ -64,7 +64,7 @@ The list SHALL be sourced from the GitHub API using the authenticated user's OAu
 
 ---
 
-### Requirement: User Profile Display
+### [x] Requirement: User Profile Display
 After successful login, Vantage SHALL display the authenticated user's GitHub display name (`name`, not `login`) and avatar in the navigation header on all protected pages. The display name and avatar URL SHALL be persisted in the local store (keyed by `github_login`) so they remain available across server restarts without requiring a re-fetch from GitHub.
 
 #### Scenario: Display name and avatar visible after login
@@ -77,7 +77,7 @@ After successful login, Vantage SHALL display the authenticated user's GitHub di
 
 ---
 
-### Requirement: Session Persistence
+### [x] Requirement: Session Persistence
 The authenticated session SHALL persist across page reloads and browser restarts until the user explicitly logs out or the session expires. Session state SHALL be stored server-side; only a session token SHALL be stored client-side (HTTP-only cookie).
 
 #### Scenario: Page reload while authenticated

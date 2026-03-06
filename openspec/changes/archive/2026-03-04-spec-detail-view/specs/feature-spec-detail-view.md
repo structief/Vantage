@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Spec Detail Route
+### [x] Requirement: Spec Detail Route
 When the user selects a spec from the secondary sidebar or the spec list, the application SHALL navigate to `/repo/[owner]/[name]/specs/[spec-slug]` and render the spec detail view in the main content area.
 
 #### Scenario: Navigating to a spec
@@ -11,7 +11,7 @@ When the user selects a spec from the secondary sidebar or the spec list, the ap
 - **WHEN** the user navigates to a `[spec-slug]` that does not exist in the repo
 - **THEN** the main content area SHALL display a "Spec not found" message with a link back to the spec list
 
-### Requirement: Spec Title Section
+### [x] Requirement: Spec Title Section
 The top of the spec detail view SHALL display a title section containing: the spec's readable name (derived from the spec's frontmatter `title` field, or the filename if absent), the GitHub username and avatar of the last git committer for the spec file, the date of the last commit to the spec file formatted as "Updated [Month] [Day], [Year]", and a status badge indicating the spec's lifecycle state.
 
 #### Scenario: Title rendered from frontmatter
@@ -72,7 +72,7 @@ Below the criteria progress bar, the spec detail view SHALL display a horizontal
 - **WHEN** the spec has associated test flow files
 - **THEN** the "Tests" tab SHALL display a numeric badge showing the count of test flow files
 
-### Requirement: Overview Tab Content
+### [x] Requirement: Overview Tab Content
 The Overview tab SHALL render the full body of the spec markdown file as formatted HTML. All standard markdown constructs SHALL be rendered (headings, paragraphs, lists, blockquotes, inline code, code blocks). Frontmatter SHALL be stripped before rendering.
 
 #### Scenario: Markdown rendered as HTML
@@ -83,7 +83,7 @@ The Overview tab SHALL render the full body of the spec markdown file as formatt
 - **WHEN** the spec file contains YAML frontmatter (delimited by `---`)
 - **THEN** the frontmatter block SHALL NOT appear in the rendered output
 
-### Requirement: Criteria Tab Content
+### [x] Requirement: Criteria Tab Content
 The Criteria tab SHALL list all criteria items extracted from the spec's criteria section (if present). Each criterion SHALL be shown as a checklist row with a checkbox (read-only in this change), the criterion text, and a "validated" or "pending" indicator.
 
 #### Scenario: Criteria list rendered
@@ -94,7 +94,7 @@ The Criteria tab SHALL list all criteria items extracted from the spec's criteri
 - **WHEN** the "Criteria" tab is active and the spec has no criteria
 - **THEN** the tab content area SHALL display "No criteria defined for this spec."
 
-### Requirement: Contracts Tab Content
+### [x] Requirement: Contracts Tab Content
 The Contracts tab SHALL list all contract files associated with the spec's change directory (`contracts/` folder within the change). Each entry shows the filename and a document icon.
 
 #### Scenario: Contracts listed
@@ -105,7 +105,7 @@ The Contracts tab SHALL list all contract files associated with the spec's chang
 - **WHEN** the "Contracts" tab is active and no contract files exist
 - **THEN** the tab content area SHALL display "No contracts defined yet."
 
-### Requirement: Tests Tab Content
+### [x] Requirement: Tests Tab Content
 The Tests tab SHALL list all test flow files associated with the spec's change directory (`tests/` folder within the change). Each entry shows the test flow filename and a document icon.
 
 #### Scenario: Tests listed
