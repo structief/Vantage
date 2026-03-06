@@ -31,7 +31,7 @@ The spec viewer overview tab SHALL expose an "*Edit*" button that enters edit mo
 
 ---
 
-### Requirement: Criteria Invalidation on Requirement Title Change
+### [x] Requirement: Criteria Invalidation on Requirement Title Change
 
 When a requirement heading (`### Requirement: <name>`) is renamed inside the editor, the corresponding criteria entry SHALL automatically revert to "not validated" status. This prevents stale validation against a requirement that no longer matches its original intent.
 
