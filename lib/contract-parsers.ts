@@ -223,7 +223,7 @@ export interface PrismaModel {
 export function parsePrismaSchema(content: string, _filename: string): PrismaModel[] | null {
   const models: PrismaModel[] = [];
   const modelBlock =
-    /model\s+(\w+)\s*\{([^}]*)\}/gs;
+    /model\s+(\w+)\s*\{([^}]*)\}/g;
 
   let match: RegExpExecArray | null;
   while ((match = modelBlock.exec(content)) !== null) {

@@ -100,7 +100,8 @@ export async function updateSpecFile(
       content: Buffer.from(content).toString("base64"),
       ...(sha ? { sha } : {}),
     });
-    return data.commit ? { sha: data.commit.sha } : null;
+    const commitSha = data.commit?.sha;
+    return commitSha ? { sha: commitSha } : null;
   } catch (err: unknown) {
     if ((err as { status?: number }).status === 404) return null;
     throw err;

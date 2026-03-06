@@ -59,7 +59,7 @@ export default function RepoPicker({ pinnedRepos, onAdd, onClose }: Props) {
         body: JSON.stringify({ full_name: fullName }),
       });
       if (res.ok) {
-        const data: { full_name: string; last_browsed: string } = await res.json();
+        const data: { full_name: string; pinned_at: string } = await res.json();
         onAdd(data);
       }
     } finally {
