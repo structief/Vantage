@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Edit Mode Toggle in Spec Viewer
+### [x] Requirement: Edit Mode Toggle in Spec Viewer
 
 The spec viewer overview tab SHALL expose an "*Edit*" button that enters edit mode for the displayed functional spec file. In edit mode the raw markdown is replaced by a rich text editor that renders markup visually (bold, italic, headings, lists, code) while storing plain markdown as the underlying representation. A "Cancel" button SHALL discard all unsaved changes and revert the view to read-only mode. A "Save" button SHALL commit the edited content to the connected git repository.
 
