@@ -1,6 +1,6 @@
 ## ADDED Requirements
 
-### Requirement: Edit Mode Toggle in Spec Viewer
+### [x] Requirement: Edit Mode Toggle in spec viewer
 
 The spec viewer overview tab SHALL expose an "*Edit*" button that enters edit mode for the displayed functional spec file. In edit mode the raw markdown is replaced by a rich text editor that renders markup visually (bold, italic, headings, lists, code) while storing plain markdown as the underlying representation. A "Cancel" button SHALL discard all unsaved changes and revert the view to read-only mode. A "Save" button SHALL commit the edited content to the connected git repository.
 
@@ -36,7 +36,7 @@ The spec viewer overview tab SHALL expose an "*Edit*" button that enters edit mo
 
 ---
 
-### Requirement: Criteria Invalidation on Requirement Title Change
+### [x] Requirement: Criteria Invalidation on Requirement Title Change
 
 When a requirement heading (`### Requirement: <name>`) is renamed inside the editor, the corresponding criteria entry SHALL automatically revert to "not validated" status. This prevents stale validation against a requirement that no longer matches its original intent.
 
@@ -52,7 +52,7 @@ When a requirement heading (`### Requirement: <name>`) is renamed inside the edi
 
 ---
 
-### Requirement: Spec Save with Git Commit
+### [x] Requirement: Spec Save with Git Commit
 
 When the user confirms a save from edit mode, the updated markdown SHALL be committed to the connected git repository via the GitHub API with an auto-generated commit message. A loading overlay SHALL be displayed over the editor during the API call, matching the style used by the criteria validation overlay.
 
