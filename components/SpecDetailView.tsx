@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { extractCriteriaCount, deriveStatus } from "@/lib/spec-utils";
+import { useState, useCallback, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
+import { extractCriteriaCount, deriveStatus, extractRequirementNames } from "@/lib/spec-utils";
 import { useSpecStatus } from "@/components/SpecStatusContext";
 import SpecTitleSection from "@/components/SpecTitleSection";
 import CriteriaProgressBar from "@/components/CriteriaProgressBar";
@@ -12,6 +13,8 @@ import ContractsTab from "@/components/ContractsTab";
 import TestsTab from "@/components/TestsTab";
 import type { OpenApiEndpoint, JsonSchemaDefinition, PrismaModel } from "@/lib/contract-parsers";
 import type { TestSection } from "@/lib/parse-flow-md";
+
+const SpecEditor = dynamic(() => import("@/components/SpecEditor"), { ssr: false });
 
 interface DeploymentRun {
   id: string;
@@ -42,8 +45,15 @@ interface Props {
   specPath?: string;
 }
 
+function isChangeScoped(specPath: string): boolean {
+  return (
+    specPath.startsWith("openspec/changes/") &&
+    !specPath.startsWith("openspec/changes/archive/")
+  );
+}
+
 export default function SpecDetailView({
-  markdown,
+  markdown: initialMarkdown,
   filename,
   login,
   avatarUrl,
@@ -65,6 +75,13 @@ export default function SpecDetailView({
   );
   const [criteriaLoading, setCriteriaLoading] = useState(false);
 
+  // Editor state
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [markdown, setMarkdown] = useState(initialMarkdown);
+  const editedMarkdownRef = useRef(initialMarkdown);
+
   const criteriaCount = extractCriteriaCount(markdown);
   const status = deriveStatus(validatedIndices.size, criteriaCount);
 
@@ -73,6 +90,83 @@ export default function SpecDetailView({
   useEffect(() => {
     if (specPath) updateSpecStatus(specPath, status);
   }, [specPath, status, updateSpecStatus]);
+
+  const canEdit =
+    !!repoFullName && !!specPath && isChangeScoped(specPath);
+
+  const handleEdit = useCallback(() => {
+    editedMarkdownRef.current = markdown;
+    setSaveError(null);
+    setIsEditing(true);
+  }, [markdown]);
+
+  const handleCancel = useCallback(() => {
+    setIsEditing(false);
+    setSaveError(null);
+    editedMarkdownRef.current = markdown;
+  }, [markdown]);
+
+  const handleEditorChange = useCallback((value: string) => {
+    editedMarkdownRef.current = value;
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!repoFullName || !specPath) return;
+    setSaveError(null);
+    setIsSaving(true);
+
+    const newMarkdown = editedMarkdownRef.current;
+    const encoded = encodeURIComponent(repoFullName);
+
+    try {
+      const res = await fetch(`/api/repos/${encoded}/specs/update`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: specPath, content: newMarkdown }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setSaveError(data.error ?? "Failed to save. Please try again.");
+        return;
+      }
+
+      // Commit succeeded — apply criteria invalidation for renamed requirements
+      const originalNames = extractRequirementNames(markdown);
+      const updatedNames = extractRequirementNames(newMarkdown);
+      const changedIndices = originalNames
+        .map((name, i) => (name !== updatedNames[i] ? i : -1))
+        .filter((i) => i !== -1);
+
+      if (changedIndices.length > 0) {
+        const nextValidated = new Set(validatedIndices);
+        changedIndices.forEach((i) => nextValidated.delete(i));
+        setValidatedIndices(nextValidated);
+
+        // Persist each cleared validation via the existing validate API
+        await Promise.allSettled(
+          changedIndices
+            .filter((i) => validatedIndices.has(i))
+            .map((i) =>
+              fetch(`/api/repos/${encoded}/specs/validate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  path: specPath,
+                  requirementIndex: i,
+                  validated: false,
+                }),
+              })
+            )
+        );
+      }
+
+      setMarkdown(newMarkdown);
+      setIsEditing(false);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [repoFullName, specPath, markdown, validatedIndices]);
 
   const handleToggle = useCallback(
     async (index: number) => {
@@ -132,6 +226,12 @@ export default function SpecDetailView({
           avatarUrl={avatarUrl}
           date={date}
           status={status}
+          isEditing={isEditing}
+          isSaving={isSaving}
+          canEdit={canEdit}
+          onEdit={handleEdit}
+          onSave={handleSave}
+          onCancel={handleCancel}
         />
         <CriteriaProgressBar total={criteriaCount} validated={validatedIndices.size} />
       </div>
@@ -151,7 +251,22 @@ export default function SpecDetailView({
 
       {/* Content — same centered column as tab bar */}
       <div className="mx-auto w-full max-w-4xl px-8 py-8">
-        {activeTab === "overview" && <SpecMarkdownRenderer markdown={markdown} />}
+        {activeTab === "overview" && (
+          isEditing ? (
+            <div>
+              <SpecEditor
+                initialMarkdown={markdown}
+                onChange={handleEditorChange}
+                isSaving={isSaving}
+              />
+              {saveError && (
+                <p className="mt-3 text-[12px] text-red-600">{saveError}</p>
+              )}
+            </div>
+          ) : (
+            <SpecMarkdownRenderer markdown={markdown} />
+          )
+        )}
         {activeTab === "criteria" && (
           <CriteriaTab
             markdown={markdown}

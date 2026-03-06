@@ -16,6 +16,12 @@ interface Props {
   avatarUrl: string | null;
   date: string | null;
   status: SpecStatus;
+  isEditing?: boolean;
+  isSaving?: boolean;
+  canEdit?: boolean;
+  onEdit?: () => void;
+  onSave?: () => void;
+  onCancel?: () => void;
 }
 
 function formatDate(iso: string): string {
@@ -23,7 +29,20 @@ function formatDate(iso: string): string {
   return `Updated ${d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 }
 
-export default function SpecTitleSection({ markdown, filename, login, avatarUrl, date, status }: Props) {
+export default function SpecTitleSection({
+  markdown,
+  filename,
+  login,
+  avatarUrl,
+  date,
+  status,
+  isEditing = false,
+  isSaving = false,
+  canEdit = false,
+  onEdit,
+  onSave,
+  onCancel,
+}: Props) {
   const { title } = extractSpecMeta(markdown, filename);
 
   return (
@@ -33,10 +52,44 @@ export default function SpecTitleSection({ markdown, filename, login, avatarUrl,
         <span className="text-[11px] font-mono text-gray-400 tracking-wide uppercase">
           {filename}
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-medium text-gray-500">
-          <span className={`w-1.5 h-1.5 rounded-full inline-block ${STATUS_DOT[status]}`} />
-          {status}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-medium text-gray-500">
+            <span className={`w-1.5 h-1.5 rounded-full inline-block ${STATUS_DOT[status]}`} />
+            {status}
+          </span>
+          {canEdit && !isEditing && (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="inline-flex items-center gap-1 rounded border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors"
+            >
+              <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8.5 1.5l2 2L3 11H1V9L8.5 1.5z" />
+              </svg>
+              Edit
+            </button>
+          )}
+          {isEditing && (
+            <>
+              <button
+                type="button"
+                onClick={onCancel}
+                disabled={isSaving}
+                className="inline-flex items-center rounded border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={isSaving}
+                className="inline-flex items-center rounded bg-gray-900 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {isSaving ? "Saving…" : "Save"}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Title */}

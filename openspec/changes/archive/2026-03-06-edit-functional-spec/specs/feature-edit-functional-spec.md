@@ -24,10 +24,15 @@ The spec viewer overview tab SHALL expose an "*Edit*" button that enters edit mo
 - **WHEN** the spec viewer is rendered without a valid `repoFullName` and `specPath`
 - **THEN** the "Edit" button SHALL NOT be rendered
 
-#### Scenario: Edit button only for change-scoped specs
+#### Scenario: Edit button only for active change-scoped specs
 
 - **WHEN** the `specPath` points to a file outside the `openspec/changes/` directory (for example, a base spec under `openspec/specs/`)
 - **THEN** the "Edit" button SHALL NOT be rendered, even if `repoFullName` and `specPath` are present
+
+#### Scenario: Edit button not shown for archived specs
+
+- **WHEN** the `specPath` points to a file inside `openspec/changes/archive/` (an archived change)
+- **THEN** the "Edit" button SHALL NOT be rendered, even though the path starts with `openspec/changes/`
 
 ---
 

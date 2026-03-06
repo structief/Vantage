@@ -21,6 +21,24 @@ Expected:
 
 Edge cases:
 - If repoFullName or specPath are missing, the "Edit" button is not rendered and cannot be clicked.
+- If specPath starts with `openspec/changes/archive/`, the "Edit" button is not rendered.
+
+## Flow: Edit button not shown for archived specs
+Type: unit
+Spec: specs/feature-edit-functional-spec.md > Requirement: Edit Mode Toggle in Spec Viewer
+
+Setup:
+- The `isChangeScoped` guard function is available.
+
+Steps:
+1. Call `isChangeScoped` with a path starting with `openspec/changes/archive/`.
+2. Call `isChangeScoped` with a path starting with `openspec/changes/` but NOT under `archive/`.
+3. Call `isChangeScoped` with a path starting with `openspec/specs/`.
+
+Expected:
+- `openspec/changes/archive/...` returns false (archived specs are not editable).
+- `openspec/changes/<active-change>/specs/...` returns true (active change specs are editable).
+- `openspec/specs/...` returns false (base specs are not editable).
 
 ## Flow: Editor is markdown-backed
 Type: unit
