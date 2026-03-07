@@ -35,20 +35,40 @@ specs and design. They are part of the change and archive with it.
    - `specs` must have `status: "done"` — if not, stop. Run `/opsx-propose` first.
    - `design` must have `status: "done"` — if not, stop. Run `/opsx-propose` first.
 
-3. **Read all context**
+3. **Validate requirement sign-off**
+
+   Read all spec files in `openspec/changes/<name>/specs/**/*.md`.
+
+   For each file, scan for requirement titles matching the pattern:
+   `### [ ] Requirement: <title>` (unchecked) vs `### [x] Requirement: <title>` (checked).
+
+   - If **any** requirement has `[ ]` (unchecked), stop immediately and report:
+
+     ```
+     Cannot generate: the following requirements have not been validated by a functional owner:
+
+     - specs/<file>.md → "<title>"
+     - specs/<file>.md → "<title>"
+
+     Check each requirement with [x] before running /opsx-generate.
+     ```
+
+   - Only continue if **every** requirement across all spec files has `[x]`.
+
+4. **Read all context**
 
    - `constitution.md` (project root)
    - `openspec/changes/<name>/specs/**/*.md`
    - `openspec/changes/<name>/design.md`
 
-4. **Determine what to generate**
+5. **Determine what to generate**
 
    Based on specs and design:
    - **Contracts**: Are there API endpoints, events, or shared data schemas? → Yes/No per type
    - **Data model**: Are there new or changed persisted entities? → Yes/No (optional)
    - **Test flows**: Always generate (every spec scenario needs a flow)
 
-5. **Generate contracts** (if applicable)
+6. **Generate contracts** (if applicable)
 
    Get instructions:
    ```bash
@@ -62,7 +82,7 @@ specs and design. They are part of the change and archive with it.
 
    Field names and endpoint paths MUST match spec scenarios exactly.
 
-6. **Generate data model** (if applicable)
+7. **Generate data model** (if applicable)
 
    ```bash
    openspec instructions data-model --change "<name>" --json
@@ -72,7 +92,7 @@ specs and design. They are part of the change and archive with it.
    Add a comment above each new model referencing the spec requirement.
    If schema.prisma already exists in the change folder, add new models/fields without removing existing ones.
 
-7. **Generate test flows**
+8. **Generate test flows**
 
    ```bash
    openspec instructions tests --change "<name>" --json
@@ -100,7 +120,7 @@ specs and design. They are part of the change and archive with it.
    - <edge case and expected outcome>
    ```
 
-8. **Show summary**
+9. **Show summary**
 
    ```
    ## Generated for: <change-name>

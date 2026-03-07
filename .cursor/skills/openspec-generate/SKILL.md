@@ -36,14 +36,34 @@ They are part of the change and move with it when archived.
    - Check that `specs` artifact has `status: "done"`. If not: stop and tell the user to create specs first.
    - Check that `design` artifact has `status: "done"`. If not: stop and tell the user to create design first.
 
-3. **Read all context**
+3. **Validate requirement sign-off**
+
+   Read all spec files in `openspec/changes/<name>/specs/**/*.md`.
+
+   For each file, scan for requirement titles matching the pattern:
+   `### [ ] Requirement: <title>` (unchecked) vs `### [x] Requirement: <title>` (checked).
+
+   - If **any** requirement has `[ ]` (unchecked), stop immediately and report:
+
+     ```
+     Cannot generate: the following requirements have not been validated by a functional owner:
+
+     - specs/<file>.md → "<title>"
+     - specs/<file>.md → "<title>"
+
+     Check each requirement with [x] before running opsx-generate.
+     ```
+
+   - Only continue if **every** requirement across all spec files has `[x]`.
+
+4. **Read all context**
 
    Read in this order:
    - `constitution.md` (project root)
    - `openspec/changes/<name>/specs/**/*.md`
    - `openspec/changes/<name>/design.md`
 
-4. **Determine what to generate**
+5. **Determine what to generate**
 
    Based on the specs and design, decide:
    - **Contracts**: Are there API endpoints, events, or shared data schemas? → Yes/No per type (api, events, data)
@@ -52,7 +72,7 @@ They are part of the change and move with it when archived.
 
    If unclear whether a data model is needed, check the "Data model changes" section in design.md.
 
-5. **Generate contracts** (if applicable)
+6. **Generate contracts** (if applicable)
 
    Get instructions:
    ```bash
@@ -69,7 +89,7 @@ They are part of the change and move with it when archived.
    - Every endpoint/event in the specs needs a corresponding contract entry
    - Be precise about required fields, types, and error responses
 
-6. **Generate data model** (if applicable)
+7. **Generate data model** (if applicable)
 
    If data model changes are needed:
    ```bash
@@ -84,7 +104,7 @@ They are part of the change and move with it when archived.
    - Include a migration note at the top of the file
    - If schema.prisma already exists in the change folder, add new models/fields without removing existing ones
 
-7. **Generate test flows**
+8. **Generate test flows**
 
    ```bash
    openspec instructions tests --change "<name>" --json
@@ -99,7 +119,7 @@ They are part of the change and move with it when archived.
    - Expected outcomes must include exact field names, status codes, and error messages from the spec
    - Reference the contract file where applicable (e.g., "See contracts/api/checkout.yaml")
 
-8. **Show summary**
+9. **Show summary**
 
    ```
    ## Generated for: <change-name>
